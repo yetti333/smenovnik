@@ -37,6 +37,33 @@ const actualMonth = actualDate.getMonth();
 const actualYear = actualDate.getFullYear();
 const vibr = 7;
 
+// =========================
+//  PŘEPÍNÁNÍ OBRAZOVEK
+// =========================
+const calendarScreen = document.getElementById('calendar-screen');
+const settingsScreen = document.getElementById('settings-screen');
+
+function showScreen(screen) {
+  // schovat obě
+  calendarScreen.classList.remove('active');
+  settingsScreen.classList.remove('active');
+
+  // zobrazit vybranou
+  screen.classList.add('active');
+}
+
+// tlačítko ⚙️ Nastavení
+document.getElementById('btn-settings').addEventListener('click', () => {
+  showScreen(settingsScreen);
+  if (navigator.vibrate) navigator.vibrate(vibr);
+});
+
+// tlačítko ⬅️ Zpět
+document.getElementById('btn-back').addEventListener('click', () => {
+  showScreen(calendarScreen);
+  if (navigator.vibrate) navigator.vibrate(vibr);
+});
+
 function renderCalendar(year, month) {
   const calendar = document.getElementById('calendar');
   const monthYear = document.getElementById('month-year');

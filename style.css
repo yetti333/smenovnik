@@ -189,3 +189,18 @@ body {
 #app-wrapper {
   flex: 1;
 }
+
+/* === Animace přechodu obrazovek === */
+.screen {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 250ms ease, transform 250ms ease;
+  display: none;
+}
+
+.screen.active {
+  display: block;
+  opacity: 1;
+  transform: translateX(0);
+}
+
