@@ -142,7 +142,7 @@ button {
 /* === Dnes === */
 .calendar-grid div.dnes {
   background-color: #ffe8c2; /* jemná pastelová oranžová */
-  outline: 2px solid #e91996; 
+  outline: 2px solid #ff0099; 
   font-weight: bold;
   border-radius: 5px;
 }
