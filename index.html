@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PWA Kalendář</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+
+  <div id="app-wrapper">
+
+    <!-- Obrazovka kalendáře -->
+    <div id="calendar-screen" class="calendar-container">
+      <div id="calendar-header">
+        <button id="prev-month">◀</button>
+        <h1 id="month-year"></h1>
+        <button id="go-today">Dnes</button>
+        <button id="next-month">▶</button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div>
+      </div>
+
+      <div class="calendar-grid" id="calendar">
+        <!-- buňky se generují skriptem -->
+      </div>
+    </div>
+
+    <!-- Obrazovka nastavení -->
+    <div id="settings-screen" class="settings-screen" style="display:none;">
+      <h2>Nastavení kalendáře</h2>
+      <p>Zatím prázdné…</p>
+      <button id="btn-back">⬅️ Zpět</button>
+    </div>
+
+  </div> <!-- ✅ TADY KONČÍ WRAPPER -->
+
+  <!-- Akční lišta dole -->
+  <div class="action-bar">
+    <button id="btn-settings">⚙️ Nastavení</button>
+    <button id="btn-today">📅 Dnes</button>
+    <button id="btn-next">➡️ Další měsíc</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
