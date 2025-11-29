@@ -55,13 +55,15 @@ function showScreen(screen) {
 // tlačítko ⚙️ Nastavení
 document.getElementById('btn-settings').addEventListener('click', () => {
   showScreen(settingsScreen);
+  document.body.classList.add("settings-open");
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
-// tlačítko ⬅️ Zpět
-document.getElementById('btn-back').addEventListener('click', () => {
+// tlačítko OK v nastavení
+document.getElementById("btn-settings-ok").addEventListener("click", () => {
   showScreen(calendarScreen);
-  if (navigator.vibrate) navigator.vibrate(vibr);
+  document.body.classList.remove("settings-open");
+  if (navigator.vibrate) navigator.vibrate(10);
 });
 
 function renderCalendar(year, month) {
@@ -221,8 +223,7 @@ function handleSwipeGesture() {
   const threshold = 50; // minimální vzdálenost pro gesto
 
   if (touchEndX < touchStartX - threshold) {
-    //if (navigator.vibrate) navigator.vibrate(vibr);
-    // swipe vlevo → další měsíc
+     // swipe vlevo → další měsíc
     currentMonth++;
     if (currentMonth > 11) {
       currentMonth = 0;
@@ -232,7 +233,6 @@ function handleSwipeGesture() {
   }
 
   if (touchEndX > touchStartX + threshold) {
-    //if (navigator.vibrate) navigator.vibrate(vibr);
     // swipe vpravo → předchozí měsíc
     if (currentYear === 2025 && currentMonth === 10) {
     return;
@@ -245,9 +245,6 @@ function handleSwipeGesture() {
     animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
   }
 }
-
-// Inicializace
-animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
 
 // Zrušení předchozího výběru dne
 document.addEventListener('click', (e) => {
@@ -265,8 +262,63 @@ function daysBetween(day1) {
   const day2 = new Date(Date.UTC(2025, 10, 1)); // listopad 2025 jako základ
   const d1 = new Date(Date.UTC(day1.getFullYear(), day1.getMonth(), day1.getDate()));
   const diff = (d1 - day2) / (1000 * 60 * 60 * 24);
-  return Math.round(diff); // přesný rozdíl v dnech
+  return Math.round(diff);
 }
 
+// Segmented control aktivace
+function activateSegment(container, value) {
+  const buttons = container.querySelectorAll("button");
+  buttons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.value === value);
+  });
+}
+
+/* ============================
+      MOTIV ZOBRAZENÍ
+============================ */
+const themeControl = document.getElementById("theme-control");
+
+// Načíst uložený motiv
+let savedTheme = localStorage.getItem("theme") || "light";
+document.body.dataset.theme = savedTheme;
+activateSegment(themeControl, savedTheme);
+
+// Kliknutí na segment motivu
+themeControl.addEventListener("click", (e) => {
+  if (e.target.tagName !== "BUTTON") return;
+
+   if (navigator.vibrate) navigator.vibrate(10);
+
+  savedTheme = e.target.dataset.value;
+  localStorage.setItem("theme", savedTheme);
+
+  document.body.dataset.theme = savedTheme;
+  activateSegment(themeControl, savedTheme);
+});
+
+/* ============================
+           SMĚNA
+============================ */
+const shiftControl = document.getElementById("shift-control");
+
+// Načíst uloženou směnu nebo použít D jako výchozí
+let savedShift = localStorage.getItem("shift") || "D";
+activeShift = savedShift;
+activateSegment(shiftControl, savedShift);
+
+// Kliknutí na segment směny
+shiftControl.addEventListener("click", (e) => {
+  if (e.target.tagName !== "BUTTON") return;
+
+  if (navigator.vibrate) navigator.vibrate(10);
+
+  activeShift = e.target.dataset.value;
+  localStorage.setItem("shift", activeShift);
+
+  activateSegment(shiftControl, activeShift);
+  renderCalendar(currentYear, currentMonth);
+});
 
 
+// === Inicializace aplikace ===
+animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));

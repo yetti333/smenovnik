@@ -7,38 +7,80 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="manifest" href="manifest.json" />
 </head>
+
 <body>
 
   <div id="app-wrapper">
 
-    <!-- Obrazovka kalendáře -->
-    <div id="calendar-screen" class="calendar-container screen active">
-      <div id="calendar-header">
-        <button id="prev-month">◀</button>
-        <h1 id="month-year"></h1>
-        <button id="go-today">Dnes</button>
-        <button id="next-month">▶</button>
-      </div>
+    <!-- ✅ SCREEN: Kalendář -->
+    <div id="calendar-screen" class="screen active">
 
-      <div class="calendar-weekdays">
-        <div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div>
-      </div>
+      <div class="calendar-container">
 
-      <div class="calendar-grid" id="calendar">
-        <!-- buňky se generují skriptem -->
+        <div id="calendar-header">
+          <button id="prev-month">◀</button>
+          <h1 id="month-year"></h1>
+          <button id="go-today">Dnes</button>
+          <button id="next-month">▶</button>
+        </div>
+
+        <div class="calendar-weekdays">
+          <div>Po</div>
+          <div>Út</div>
+          <div>St</div>
+          <div>Čt</div>
+          <div>Pá</div>
+          <div>So</div>
+          <div>Ne</div>
+        </div>
+
+        <div class="calendar-grid" id="calendar">
+          <!-- buňky se generují skriptem -->
+        </div>
+
       </div>
     </div>
 
-    <!-- Obrazovka nastavení -->
-    <div id="settings-screen" class="settings-screen screen" >
-      <h2>Nastavení kalendáře</h2>
-      <p>Zatím prázdné…</p>
-      <button id="btn-back">⬅️ Zpět</button>
+    <!-- ✅ SCREEN: Nastavení -->
+    <div id="settings-screen" class="screen">
+
+      <header class="settings-header">
+        <h2>Nastavení</h2>
+      </header>
+
+      <div class="settings-content">
+
+        <!-- Motiv -->
+        <section class="settings-section">
+          <h3>Motiv zobrazení</h3>
+          <div class="segmented-control" id="theme-control">
+            <button data-value="light">🌞 Světlý</button>
+            <button data-value="dark">🌙 Tmavý</button>
+          </div>
+        </section>
+
+        <!-- Směna -->
+        <section class="settings-section">
+          <h3>Směna</h3>
+          <div class="segmented-control" id="shift-control">
+            <button data-value="A">A</button>
+            <button data-value="B">B</button>
+            <button data-value="C">C</button>
+            <button data-value="D">D</button>
+          </div>
+        </section>
+
+      </div>
+
+      <div class="settings-footer">
+        <button id="btn-settings-ok">OK</button>
+      </div>
+
     </div>
 
-  </div> <!-- ✅ TADY KONČÍ WRAPPER -->
+  </div> <!-- ✅ konec wrapperu -->
 
-  <!-- Akční lišta dole -->
+  <!-- ✅ Akční lišta dole -->
   <div class="action-bar">
     <button id="btn-settings">⚙️ Nastavení</button>
     <button id="btn-today">📅 Dnes</button>
