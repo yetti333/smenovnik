@@ -66,33 +66,6 @@ html, body {
   text-align: center;
 }
 
-/* === Tlačítka === */
-button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#prev-month,
-#next-month {
-  background-color: #90caf9;
-}
-
-#prev-month:hover,
-#next-month:hover {
-  background-color: #64b5f6;
-}
-
-#go-today {
-  background-color: #a5d6a7;
-}
-
-#go-today:hover {
-  background-color: #81c784;
-}
-
 /* === Grid === */
 .calendar-weekdays,
 .calendar-grid {
@@ -141,9 +114,10 @@ button {
 
 /* === Vybraný den === */
 .calendar-grid div.selected {
-  background-color: #ffd54f;
-  outline: 2px solid #e1680a;
+  /*background-color: #6defc8;*/
+  outline: 2px solid #0a0ae1;
   font-weight: bold;
+  box-shadow: inset 0 0 8px #0a0ae1;
 }
 
 /* === Hover === */
@@ -155,10 +129,11 @@ button {
 
 /* === Dnes === */
 .calendar-grid div.dnes {
-  background-color: #ffe8c2;
-  outline: 2px solid #ff0099;
+  /* background-color: #ffe8c2; */
+  outline: 3px solid #ff0099;
   font-weight: bold;
   border-radius: 5px;
+  box-shadow: inset 0 0 8px rgba(255, 0, 153, 0.5);
 }
 
 /* === Animace přechodu měsíců === */
@@ -298,9 +273,9 @@ body.settings-open .action-bar {
 }
 
 .action-bar button {
-  flex: 1;
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: 1.6rem; /* větší, aby byly ikonky čitelné */
   padding: 0.5rem;
+  cursor: pointer;
 }

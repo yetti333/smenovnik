@@ -59,6 +59,43 @@ document.getElementById('btn-settings').addEventListener('click', () => {
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
+// tlačítko Dnes v akční liště
+document.getElementById("btn-today").addEventListener("click", () => {
+  if (currentMonth != actualMonth) {
+    currentMonth = actualMonth;
+    currentYear = actualYear;
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
+  } else {
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  }
+});
+
+// tlačítko přechození měsíce v akční liště
+document.getElementById("btn-prev").addEventListener("click", () => {
+  if (currentYear === 2025 && currentMonth === 10) {
+    return;
+  }
+  currentMonth--;
+  if (currentMonth < 0) {
+    currentMonth = 11;
+    currentYear--;
+  } 
+  if (navigator.vibrate) navigator.vibrate(vibr);
+  animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
+});
+
+// tlačítko dalšího měsíce v akční liště
+document.getElementById("btn-next").addEventListener("click", () => {
+  currentMonth++;
+  if (currentMonth > 11) {
+    currentMonth = 0;
+    currentYear++;
+  }
+  if (navigator.vibrate) navigator.vibrate(vibr);
+  animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
+});
+
 // tlačítko OK v nastavení
 document.getElementById("btn-settings-ok").addEventListener("click", () => {
   showScreen(calendarScreen);
@@ -66,10 +103,23 @@ document.getElementById("btn-settings-ok").addEventListener("click", () => {
   if (navigator.vibrate) navigator.vibrate(10);
 });
 
+function getShiftArray() {
+  const shift = localStorage.getItem("shift") || "A";
+
+  switch (shift) {
+    case "A": return smenaA;
+    case "B": return smenaB;
+    case "C": return smenaC;
+    case "D": return smenaD;
+  }
+}
+
 function renderCalendar(year, month) {
   const calendar = document.getElementById('calendar');
   const monthYear = document.getElementById('month-year');
-  const prevButton = document.getElementById('prev-month'); 
+  const prevButton = document.getElementById('btn-prev'); 
+
+  const smena = getShiftArray();
  
   calendar.innerHTML = '';
 
@@ -113,10 +163,10 @@ function renderCalendar(year, month) {
     shiftDayStart = daysBetween(new Date(year, month, 1));
     shiftDayIndex = (shiftDayStart + day - 1) % 28;
     //console.log("index směny: ", shiftDayIndex);
-    if (smenaD[shiftDayIndex] === 0) classes += ' volno';
-    if (smenaD[shiftDayIndex] === 1) classes += ' ranni';
-    if (smenaD[shiftDayIndex] === 2) classes += ' odpoledni';
-    if (smenaD[shiftDayIndex] === 3) classes += ' nocni';
+    if (smena[shiftDayIndex] === 0) classes += ' volno';
+    if (smena[shiftDayIndex] === 1) classes += ' ranni';
+    if (smena[shiftDayIndex] === 2) classes += ' odpoledni';
+    if (smena[shiftDayIndex] === 3) classes += ' nocni';
 
      // svátky
     const key = `${day}-${month+1}`; // měsíc +1 protože Date.getMonth() je 0-based
@@ -148,44 +198,6 @@ function renderCalendar(year, month) {
     }
   });
 }
-
-// Tlačítko: předchozí měsíc
-document.getElementById('prev-month').addEventListener('click', () => {
-  if (currentYear === 2025 && currentMonth === 10) {
-    return;
-  }
-  currentMonth--;
-  if (currentMonth < 0) {
-    currentMonth = 11;
-    currentYear--;
-  }
-  if (navigator.vibrate) navigator.vibrate(vibr);
-  animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
-});
-
-// Tlačítko: další měsíc
-document.getElementById('next-month').addEventListener('click', () => {
-  currentMonth++;
-  if (currentMonth > 11) {
-    currentMonth = 0;
-    currentYear++;
-  }
-  if (navigator.vibrate) navigator.vibrate(vibr);
-  animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
-});
-
-// Tlačítko DNES
-document.getElementById('go-today').addEventListener('click', () => {
-  if (currentMonth != actualMonth) {
-    currentMonth = actualMonth;
-    currentYear = actualYear;
-    if (navigator.vibrate) navigator.vibrate(vibr);
-    animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
-  } else {
-    if (navigator.vibrate) navigator.vibrate(vibr);
-  }
-  
-});
 
 // Animace kalendáře
 function animateCalendarUpdate(callback) {
