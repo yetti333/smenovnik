@@ -73,15 +73,42 @@
       </div>
     </div>
 
+    <!-- Obrazovka editace hodin -->
     <div id="edit-screen" class="screen">
-      <h2>Pracovní hodiny</h2>
-      <div class="edit-container">
-        <!-- sem přijde formulář -->
-        <p>Zde si nastavíte směny a hodiny pro aktuální měsíc.</p>
-        <button id="btn-back">🔙</button>
-      </div>
-    </div>
+  <h2>Nastavení pracovních hodin</h2>
 
+  <form id="hours-form" class="hours-form">
+    <!-- Všední dny -->
+    <label>
+      Hodiny pro všední dny:
+      <input type="number" step="0.5" min="0" id="weekday-hours" value="7.5">
+    </label>
+
+    <!-- Sobota -->
+    <label>
+      Hodiny pro sobotu:
+      <input type="number" step="0.5" min="0" id="saturday-hours" value="11">
+    </label>
+
+    <!-- Neděle -->
+    <label>
+      Hodiny pro neděli:
+      <input type="number" step="0.5" min="0" id="sunday-hours" value="7.5">
+    </label>
+
+    <!-- Přesčas -->
+    <label>
+      Přesčas (volitelně):
+      <input type="number" step="0.5" min="0" id="overtime-hours" value="3.5">
+    </label>
+
+    <!-- Akční tlačítka -->
+    <div class="form-actions">
+      <button type="button" id="btn-cancel">Storno</button>
+      <button type="submit" id="btn-ok">OK</button>
+    </div>
+  </form>
+</div>
 
   </div> <!-- ✅ konec wrapperu -->
 

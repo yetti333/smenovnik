@@ -79,11 +79,29 @@ const btnEdit = document.getElementById("btn-edit").addEventListener("click", ()
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
-// tlačítko 🔙 Zpět z editační obrazovky
-const btnBack = document.getElementById("btn-back").addEventListener("click", () => {
+const hoursForm = document.getElementById("hours-form");
+const btnCancel = document.getElementById("btn-cancel");
+
+hoursForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  const weekday = parseFloat(document.getElementById("weekday-hours").value);
+  const saturday = parseFloat(document.getElementById("saturday-hours").value);
+  const sunday = parseFloat(document.getElementById("sunday-hours").value);
+  const overtime = parseFloat(document.getElementById("overtime-hours").value);
+
+  // TODO: aplikovat hromadně do kalendáře podle směn
+  console.log("Uloženo:", { weekday, saturday, sunday, overtime });
+
+  // návrat na kalendář
   showScreen(calendarScreen);
   document.body.classList.remove("edit-open");
-  if (navigator.vibrate) navigator.vibrate(vibr);
+});
+
+btnCancel.addEventListener("click", () => {
+  // návrat bez uložení
+  showScreen(calendarScreen);
+  document.body.classList.remove("edit-open");
 });
 
 // tlačítko 📅 Dnes v akční liště
