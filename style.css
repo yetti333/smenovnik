@@ -233,6 +233,12 @@ body[data-theme="dark"] {
 body.settings-open .action-bar {
   display: none;
 }
+/* === Skrytí lišty při editaci === */
+body.edit-open .action-bar {
+  opacity: 0;
+  pointer-events: none; /* aby nešlo klikat, když je skrytá */
+}
+
 
 /* === Footer nastavení === */
 .settings-footer {
@@ -278,4 +284,58 @@ body.settings-open .action-bar {
   font-size: 1.6rem; /* větší, aby byly ikonky čitelné */
   padding: 0.5rem;
   cursor: pointer;
+}
+/* === Zobrazení kalendáře normální režim - jen datum === */
+.day {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.day-number {
+  font-size: 1.1rem;
+}
+
+.day-hours {
+  display: none;
+}
+
+.show-hours .day-number {
+  font-size: 0.7rem;
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  opacity: 0.7;
+  font-weight: bold;
+}
+
+.show-hours .day-hours {
+  display: block;
+  font-size: 1.1rem;  
+}
+
+.calendar-grid .day {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 12vw;   /* výška je 12 % šířky viewportu */
+  max-height: 70px;
+  min-height: 45px;
+}
+
+/* === Tlačítko Zobrazit/skrýt pracovní hodiny - aktivní stav === */
+#btn-hours.active {
+  background: #8fbaff;
+  color: white;
+  transform: scale(1.08);
+  transition: 0.15s ease;
+  border-radius: 8px;
+}
+
+/* === Barva pracovních hodin === */
+.day-hours {
+  color: #2a2a2a !important; /* nebo jakákoliv tvoje barva */
+  font-weight: normal !important;
 }

@@ -42,16 +42,22 @@ const vibr = 7;
 // =========================
 const calendarScreen = document.getElementById('calendar-screen');
 const settingsScreen = document.getElementById('settings-screen');
+const editScreen = document.getElementById('edit-screen');
+
 
 function showScreen(screen) {
   // schovat obě
   calendarScreen.classList.remove('active');
   settingsScreen.classList.remove('active');
+  editScreen.classList.remove('active');
 
   // zobrazit vybranou
   screen.classList.add('active');
 }
 
+// =============================
+//      AKČNÍ LIŠTA
+// ============================
 // tlačítko ⚙️ Nastavení
 document.getElementById('btn-settings').addEventListener('click', () => {
   showScreen(settingsScreen);
@@ -59,7 +65,28 @@ document.getElementById('btn-settings').addEventListener('click', () => {
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
-// tlačítko Dnes v akční liště
+// tlačítko OK v nastavení
+document.getElementById("btn-settings-ok").addEventListener("click", () => {
+  showScreen(calendarScreen);
+  document.body.classList.remove("settings-open");
+  if (navigator.vibrate) navigator.vibrate(10);
+});
+
+// tlačítko ✏️ Editovat
+const btnEdit = document.getElementById("btn-edit").addEventListener("click", () => {
+  showScreen(editScreen);
+  document.body.classList.add("edit-open");
+  if (navigator.vibrate) navigator.vibrate(vibr);
+});
+
+// tlačítko 🔙 Zpět z editační obrazovky
+const btnBack = document.getElementById("btn-back").addEventListener("click", () => {
+  showScreen(calendarScreen);
+  document.body.classList.remove("edit-open");
+  if (navigator.vibrate) navigator.vibrate(vibr);
+});
+
+// tlačítko 📅 Dnes v akční liště
 document.getElementById("btn-today").addEventListener("click", () => {
   if (currentMonth != actualMonth) {
     currentMonth = actualMonth;
@@ -71,7 +98,7 @@ document.getElementById("btn-today").addEventListener("click", () => {
   }
 });
 
-// tlačítko přechození měsíce v akční liště
+// tlačítko ⬅️ předchozího měsíce v akční liště
 document.getElementById("btn-prev").addEventListener("click", () => {
   if (currentYear === 2025 && currentMonth === 10) {
     return;
@@ -85,7 +112,7 @@ document.getElementById("btn-prev").addEventListener("click", () => {
   animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
 });
 
-// tlačítko dalšího měsíce v akční liště
+// tlačítko ➡️ dalšího měsíce v akční liště
 document.getElementById("btn-next").addEventListener("click", () => {
   currentMonth++;
   if (currentMonth > 11) {
@@ -96,13 +123,25 @@ document.getElementById("btn-next").addEventListener("click", () => {
   animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
 });
 
-// tlačítko OK v nastavení
-document.getElementById("btn-settings-ok").addEventListener("click", () => {
-  showScreen(calendarScreen);
-  document.body.classList.remove("settings-open");
-  if (navigator.vibrate) navigator.vibrate(10);
+// tlačítko 🕒Zobrazit/skrýt pracovní hodiny
+const btnHours = document.getElementById("btn-hours");
+
+btnHours.addEventListener("click", () => {
+  document.body.classList.toggle("show-hours");
+  btnHours.classList.toggle("active");
+
+  const hoursCells = document.querySelectorAll(".day-hours");
+
+  if (document.body.classList.contains("show-hours")) {
+    hoursCells.forEach(cell => cell.textContent = "7,5");
+  } else {
+    hoursCells.forEach(cell => cell.textContent = "");
+  }
 });
 
+// =============================
+//      ZÍSKÁNÍ POLE SMĚNY
+// ============================
 function getShiftArray() {
   const shift = localStorage.getItem("shift") || "A";
 
@@ -114,6 +153,9 @@ function getShiftArray() {
   }
 }
 
+// =============================
+//      RENDER KALENDÁŘE
+// ============================
 function renderCalendar(year, month) {
   const calendar = document.getElementById('calendar');
   const monthYear = document.getElementById('month-year');
@@ -133,7 +175,7 @@ function renderCalendar(year, month) {
     year: 'numeric'
   });
   
-// Zakázat tlačítko předchozí měsíc pro listopad 2025
+  // Zakázat tlačítko předchozí měsíc pro listopad 2025
  if (year === 2025 && month === 10) {
     prevButton.disabled = true;
     prevButton.style.pointerEvents = 'none';
@@ -178,7 +220,12 @@ function renderCalendar(year, month) {
               tooltip = velikonoce[year][key];
       }
    
-    calendar.innerHTML += `<div class="${classes.trim()}" title="${tooltip}">${day}</div>`;
+    calendar.innerHTML += `
+      <div class="day ${classes.trim()}" title="${tooltip}">
+        <span class="day-number">${day}</span>
+        <span class="day-hours"></span>
+      </div>
+    `;
   }
 
   // Zvýraznění dne po kliknutí
@@ -199,7 +246,9 @@ function renderCalendar(year, month) {
   });
 }
 
-// Animace kalendáře
+// ===================================
+//      ANIMACE AKTUALIZACE KALENDÁŘE
+// ===================================
 function animateCalendarUpdate(callback) {
   const calendar = document.getElementById('calendar');
 
@@ -217,7 +266,9 @@ function animateCalendarUpdate(callback) {
   }, 300);
 }
 
-// Posun přejetím
+// =============================
+//      GESTA PŘETAŽENÍ
+// ============================
 let touchStartX = 0;
 let touchEndX = 0;
 const calendarContainer = document.querySelector('.calendar-container');
@@ -258,7 +309,9 @@ function handleSwipeGesture() {
   }
 }
 
-// Zrušení předchozího výběru dne
+// =============================
+//      ZRUŠENÍ VÝBĚRU DNŮ
+// ============================
 document.addEventListener('click', (e) => {
   const calendar = document.getElementById('calendar');
   const clickedInsideCalendarCell = e.target.closest('#calendar div');
@@ -269,7 +322,9 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Funkce pro výpočet dnů mezi dvěma daty
+// =============================
+//      POČET DNŮ MEZI DATY
+// ============================
 function daysBetween(day1) {
   const day2 = new Date(Date.UTC(2025, 10, 1)); // listopad 2025 jako základ
   const d1 = new Date(Date.UTC(day1.getFullYear(), day1.getMonth(), day1.getDate()));
@@ -277,7 +332,9 @@ function daysBetween(day1) {
   return Math.round(diff);
 }
 
-// Segmented control aktivace
+// ===================================
+//      AKTIVACE SEGMENTOVÉHO OVLÁDÁNÍ
+// ===================================
 function activateSegment(container, value) {
   const buttons = container.querySelectorAll("button");
   buttons.forEach(btn => {
@@ -308,9 +365,9 @@ themeControl.addEventListener("click", (e) => {
   activateSegment(themeControl, savedTheme);
 });
 
-/* ============================
-           SMĚNA
-============================ */
+// =============================
+//      SMĚNA ZOBRAZENÍ
+// ============================
 const shiftControl = document.getElementById("shift-control");
 
 // Načíst uloženou směnu nebo použít D jako výchozí
@@ -331,6 +388,7 @@ shiftControl.addEventListener("click", (e) => {
   renderCalendar(currentYear, currentMonth);
 });
 
-
-// === Inicializace aplikace ===
+// =============================
+//      INICIALIZACE KALENDÁŘE
+// ============================
 animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
