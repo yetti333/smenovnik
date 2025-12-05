@@ -106,7 +106,7 @@ btnCancel.addEventListener("click", () => {
 
 // tlačítko 📅 Dnes v akční liště
 document.getElementById("btn-today").addEventListener("click", () => {
-  if (currentMonth != actualMonth) {
+  if ((currentMonth != actualMonth) || (currentYear != actualYear)) {
     currentMonth = actualMonth;
     currentYear = actualYear;
     if (navigator.vibrate) navigator.vibrate(vibr);
@@ -202,6 +202,16 @@ function renderCalendar(year, month) {
     prevButton.style.pointerEvents = 'auto';
   }
 
+  // Skrýt tlačitko Dnes pokud je aktuální měsíc a rok
+  const btnToday = document.getElementById('btn-today');
+  if (year === actualYear && month === actualMonth) {
+    btnToday.disabled = true;
+    btnToday.style.pointerEvents = 'none';
+  } else {
+    btnToday.disabled = false;
+    btnToday.style.pointerEvents = 'auto';
+  }
+
   // Prázdné buňky před začátkem měsíce
   for (let i = 0; i < startDay; i++) {
     calendar.innerHTML += `<div></div>`;
@@ -216,13 +226,12 @@ function renderCalendar(year, month) {
     let classes = '';
     let tooltip = '';
     
-    //Dnes
+    // Dnes
     if (day === actualDay && month === actualMonth && year === actualYear) classes += ' dnes';
     
-    // směny
+    // Směny
     shiftDayStart = daysBetween(new Date(year, month, 1));
     shiftDayIndex = (shiftDayStart + day - 1) % 28;
-    //console.log("index směny: ", shiftDayIndex);
     if (smena[shiftDayIndex] === 0) classes += ' volno';
     if (smena[shiftDayIndex] === 1) classes += ' ranni';
     if (smena[shiftDayIndex] === 2) classes += ' odpoledni';
