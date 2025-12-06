@@ -1,3 +1,19 @@
+// ===============================
+//      REGISTRACE SERVICE WORKERU
+// ===============================
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/service-worker.js") // cesta musí odpovídat umístění souboru
+      .then(reg => {
+        console.log("Service Worker registrován:", reg.scope);
+      })
+      .catch(err => {
+        console.error("Chyba při registraci Service Workeru:", err);
+      });
+  });
+}
+
 const smenaA = [0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0]; //28x, 1-11-2025
 const smenaB = [1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1];
 const smenaC = [3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3];
@@ -97,34 +113,6 @@ function loadHours(day) {
     request.onerror = () => reject(request.error);
   });
 }
-/*
-// ✅ Použití s async/await
-async function demo() {
-  let today = new Date().toISOString().split("T")[0];
-
-  // uložíme hodiny;
-  // dnešní datum jako klíč
-  today = new Date().toISOString().split("T")[0];
-
-// načtení hodnot z inputů
-  const data = {
-    weekday: parseFloat(document.getElementById("weekday-hours").value) || 0,
-    saturday: parseFloat(document.getElementById("saturday-hours").value) || 0,
-    sunday: parseFloat(document.getElementById("sunday-hours").value) || 0,
-    overtime: parseFloat(document.getElementById("overtime-hours").value) || 0,
-};
-  console.log(" Výroba hodin:", today, data);
-
-// uložení do IndexedDB
-  await saveHours(today, data);
-
-  // načteme hodiny
-  const entry = await loadHours(today);
-  console.log("Načtené hodiny:", entry);
-}
-
-demo();
-*/
 
 // ===================================
 //      FUNKCE ZOBRAZENÍ OBRAZOVEK
@@ -288,7 +276,7 @@ function renderCalendar(year, month) {
     prevButton.disabled = false;
     prevButton.style.pointerEvents = 'auto';
   }
-
+  
   // Skrýt tlačitko Dnes pokud je aktuální měsíc a rok
   const btnToday = document.getElementById('btn-today');
   if (year === actualYear && month === actualMonth) {
@@ -345,19 +333,39 @@ function renderCalendar(year, month) {
   // Zvýraznění dne po kliknutí
   const dayCells = calendar.querySelectorAll('div');
   let selectedDay = null;
+  const btnEdit = document.getElementById('btn-edit');
+  
+  btnEdit.disabled = true;
+  btnEdit.style.pointerEvents = 'none';
+
   dayCells.forEach(cell => {
     if (cell.textContent.trim() !== '') {
       cell.addEventListener('click', () => {
         // Zruš předchozí výběr
         dayCells.forEach(c => c.classList.remove('selected'));
+        
         // Přidej zvýraznění na kliknutý den
         cell.classList.add('selected');
         selectedDay = parseInt(cell.textContent);
+        btnEdit.disabled = false;
+        btnEdit.style.pointerEvents = 'auto';
+        console.log(`Vybrán den: ${selectedDay}.${month + 1}.${year}`); 
+
         if (navigator.vibrate) navigator.vibrate(vibr);
-        //console.log("den ", selectedDay);
       });
     }
   });
+
+  // Kliknutí mimo kalendář = zrušení výběru
+document.addEventListener('click', e => {
+  if (!calendar.contains(e.target) && !btnEdit.contains(e.target)) {
+    dayCells.forEach(c => c.classList.remove('selected'));
+    selectedDay = null;
+    btnEdit.disabled = true;
+    btnEdit.style.pointerEvents = 'none';
+    console.log("Zrušen výběr dne");
+  }
+});
 }
 
 // ===================================
