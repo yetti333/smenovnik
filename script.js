@@ -44,7 +44,91 @@ const calendarScreen = document.getElementById('calendar-screen');
 const settingsScreen = document.getElementById('settings-screen');
 const editScreen = document.getElementById('edit-screen');
 
+// ===================================
+//      INDEXEDDB PRO PRACOVNÍ HODINY
+// ===================================
+// Inicializace databáze (na začátku kódu)
+const request = indexedDB.open("CalendarDB", 1);
 
+request.onupgradeneeded = (event) => {
+  const db = event.target.result;
+  if (!db.objectStoreNames.contains("hours")) {
+    // klíčem bude den (např. "2025-12-06")
+    db.createObjectStore("hours", { keyPath: "day" });
+  }
+};
+
+// Funkce pro uložení hodin (Promise + async/await)
+function saveHours(day, data) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("CalendarDB", 1);
+
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const tx = db.transaction("hours", "readwrite");
+      const store = tx.objectStore("hours");
+
+      // put = vloží nebo přepíše záznam pro daný den
+      store.put({ day, ...data });
+
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Funkce pro načtení hodin (Promise + async/await)
+function loadHours(day) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open("CalendarDB", 1);
+
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const tx = db.transaction("hours", "readonly");
+      const store = tx.objectStore("hours");
+
+      const getReq = store.get(day);
+      getReq.onsuccess = () => resolve(getReq.result);
+      getReq.onerror = () => reject(getReq.error);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
+}
+/*
+// ✅ Použití s async/await
+async function demo() {
+  let today = new Date().toISOString().split("T")[0];
+
+  // uložíme hodiny;
+  // dnešní datum jako klíč
+  today = new Date().toISOString().split("T")[0];
+
+// načtení hodnot z inputů
+  const data = {
+    weekday: parseFloat(document.getElementById("weekday-hours").value) || 0,
+    saturday: parseFloat(document.getElementById("saturday-hours").value) || 0,
+    sunday: parseFloat(document.getElementById("sunday-hours").value) || 0,
+    overtime: parseFloat(document.getElementById("overtime-hours").value) || 0,
+};
+  console.log(" Výroba hodin:", today, data);
+
+// uložení do IndexedDB
+  await saveHours(today, data);
+
+  // načteme hodiny
+  const entry = await loadHours(today);
+  console.log("Načtené hodiny:", entry);
+}
+
+demo();
+*/
+
+// ===================================
+//      FUNKCE ZOBRAZENÍ OBRAZOVEK
+// ===================================
 function showScreen(screen) {
   // schovat obě
   calendarScreen.classList.remove('active');
@@ -82,16 +166,19 @@ const btnEdit = document.getElementById("btn-edit").addEventListener("click", ()
 const hoursForm = document.getElementById("hours-form");
 const btnCancel = document.getElementById("btn-cancel");
 
-hoursForm.addEventListener("submit", (e) => {
+hoursForm.addEventListener("submit", async(e) => {
   e.preventDefault();
 
-  const weekday = parseFloat(document.getElementById("weekday-hours").value);
-  const saturday = parseFloat(document.getElementById("saturday-hours").value);
-  const sunday = parseFloat(document.getElementById("sunday-hours").value);
-  const overtime = parseFloat(document.getElementById("overtime-hours").value);
-
-  // TODO: aplikovat hromadně do kalendáře podle směn
-  console.log("Uloženo:", { weekday, saturday, sunday, overtime });
+  const data = {
+      weekday: parseFloat(document.getElementById("weekday-hours").value) || 0,
+      saturday: parseFloat(document.getElementById("saturday-hours").value) || 0,
+      sunday: parseFloat(document.getElementById("sunday-hours").value) || 0,
+      overtime: parseFloat(document.getElementById("overtime-hours").value) || 0,
+    };
+  const today = new Date().toISOString().split("T")[0];
+  await saveHours(today, data);
+ 
+  console.log("Uloženo:", today, data);
 
   // návrat na kalendář
   showScreen(calendarScreen);
@@ -278,6 +365,11 @@ function renderCalendar(year, month) {
 // ===================================
 function animateCalendarUpdate(callback) {
   const calendar = document.getElementById('calendar');
+
+  // Načtení hodin při renderu kalendáře
+  loadHours(new Date().toISOString().split("T")[0]).then(entry => {
+  console.log("Načtené hodiny při renderu kalendáře:", entry);
+  });
 
   calendar.classList.add('fade-out');
 
