@@ -137,13 +137,6 @@ document.getElementById('btn-settings').addEventListener('click', () => {
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
-// tlačítko OK v nastavení
-document.getElementById("btn-settings-ok").addEventListener("click", () => {
-  showScreen(calendarScreen);
-  document.body.classList.remove("settings-open");
-  if (navigator.vibrate) navigator.vibrate(10);
-});
-
 // tlačítko ✏️ Editovat
 const btnEdit = document.getElementById("btn-edit").addEventListener("click", () => {
   showScreen(editScreen);
@@ -349,8 +342,6 @@ function renderCalendar(year, month) {
         selectedDay = parseInt(cell.textContent);
         btnEdit.disabled = false;
         btnEdit.style.pointerEvents = 'auto';
-        console.log(`Vybrán den: ${selectedDay}.${month + 1}.${year}`); 
-
         if (navigator.vibrate) navigator.vibrate(vibr);
       });
     }
@@ -363,7 +354,6 @@ document.addEventListener('click', e => {
     selectedDay = null;
     btnEdit.disabled = true;
     btnEdit.style.pointerEvents = 'none';
-    console.log("Zrušen výběr dne");
   }
 });
 }
@@ -469,11 +459,28 @@ function activateSegment(container, value) {
   });
 }
 
+// logika pro přepínání záložek
+const tabButtons = document.querySelectorAll(".tab-header button");
+const tabPanes = document.querySelectorAll(".tab-pane");
+
+tabButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    tabButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    if (navigator.vibrate) navigator.vibrate(vibr);
+
+    const target = btn.dataset.tab;
+    tabPanes.forEach(pane => {
+      pane.classList.toggle("active", pane.id === target);
+    });
+  });
+});
+
+const themeControl = document.getElementById("theme-control");
 /* ============================
       MOTIV ZOBRAZENÍ
 ============================ */
-const themeControl = document.getElementById("theme-control");
-
 // Načíst uložený motiv
 let savedTheme = localStorage.getItem("theme") || "light";
 document.body.dataset.theme = savedTheme;
@@ -483,7 +490,7 @@ activateSegment(themeControl, savedTheme);
 themeControl.addEventListener("click", (e) => {
   if (e.target.tagName !== "BUTTON") return;
 
-   if (navigator.vibrate) navigator.vibrate(10);
+  if (navigator.vibrate) navigator.vibrate(vibr);
 
   savedTheme = e.target.dataset.value;
   localStorage.setItem("theme", savedTheme);
@@ -493,7 +500,62 @@ themeControl.addEventListener("click", (e) => {
 });
 
 // =============================
-//      SMĚNA ZOBRAZENÍ
+//      INPUT HODIN 
+// ============================
+const inputs = document.querySelectorAll('#hours input[type="number"]');
+
+inputs.forEach(input => {
+  // načtení uložené hodnoty
+  const savedValue = localStorage.getItem(input.id);
+  if (savedValue !== null) {
+    input.value = savedValue;
+  }
+  // při kliknutí do pole se vymaže obsah
+  input.addEventListener('focus', function() {
+    this.select();
+  });
+
+  // volitelně i při kliknutí myší
+  input.addEventListener('click', function() {
+    this.value = '';
+  });
+
+  // Enter = vyskočení z pole
+  input.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.blur(); // ztratí focus
+    }
+  });
+
+  // tlačítko OK uloží všechny hodnoty
+  const btnOk = document.getElementById('btn-settings-ok');
+  btnOk.addEventListener('click', () => {
+    inputs.forEach(input => {
+      localStorage.setItem(input.id, input.value);
+    });
+    showScreen(calendarScreen);
+    document.body.classList.remove("settings-open");
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+
+  // tlačítko Cancel vrátí hodnotu z localStorage
+  const btnCancel = document.getElementById('btn-settings-cancel');
+  btnCancel.addEventListener('click', () => {
+    const savedValue = localStorage.getItem(input.id);
+    if (savedValue !== null) {
+      input.value = savedValue;
+    }
+    showScreen(calendarScreen);
+    document.body.classList.remove("settings-open");
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+});
+
+
+// =============================
+//      SMĚNA - ZOBRAZENÍ
 // ============================
 const shiftControl = document.getElementById("shift-control");
 
@@ -506,7 +568,7 @@ activateSegment(shiftControl, savedShift);
 shiftControl.addEventListener("click", (e) => {
   if (e.target.tagName !== "BUTTON") return;
 
-  if (navigator.vibrate) navigator.vibrate(10);
+  if (navigator.vibrate) navigator.vibrate(vibr);
 
   activeShift = e.target.dataset.value;
   localStorage.setItem("shift", activeShift);
