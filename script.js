@@ -64,60 +64,6 @@ const settingsScreen = document.getElementById('settings-screen');
 const editScreen = document.getElementById('edit-screen');
 
 // ===================================
-//      INDEXEDDB PRO PRACOVNÍ HODINY
-// ===================================
-// Inicializace databáze (na začátku kódu)
-const request = indexedDB.open("CalendarDB", 1);
-
-request.onupgradeneeded = (event) => {
-  const db = event.target.result;
-  if (!db.objectStoreNames.contains("hours")) {
-    // klíčem bude den (např. "2025-12-06")
-    db.createObjectStore("hours", { keyPath: "day" });
-  }
-};
-
-// Funkce pro uložení hodin (Promise + async/await)
-function saveHours(day, data) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("CalendarDB", 1);
-
-    request.onsuccess = (event) => {
-      const db = event.target.result;
-      const tx = db.transaction("hours", "readwrite");
-      const store = tx.objectStore("hours");
-
-      // put = vloží nebo přepíše záznam pro daný den
-      store.put({ day, ...data });
-
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => reject(tx.error);
-    };
-
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// Funkce pro načtení hodin (Promise + async/await)
-function loadHours(day) {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("CalendarDB", 1);
-
-    request.onsuccess = (event) => {
-      const db = event.target.result;
-      const tx = db.transaction("hours", "readonly");
-      const store = tx.objectStore("hours");
-
-      const getReq = store.get(day);
-      getReq.onsuccess = () => resolve(getReq.result);
-      getReq.onerror = () => reject(getReq.error);
-    };
-
-    request.onerror = () => reject(request.error);
-  });
-}
-
-// ===================================
 //      FUNKCE ZOBRAZENÍ OBRAZOVEK
 // ===================================
 function showScreen(screen) {
@@ -410,6 +356,11 @@ function renderCalendar(year, month) {
   const lastDay = new Date(year, month + 1, 0);
   const startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
 
+  // Pomocná funkce pro formátování ISO bez posunu
+  function formatDateISO(year, month, day) {
+    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
   // Zobrazit název měsíce a rok
   monthYear.textContent = firstDay.toLocaleString('cs-CZ', {
     month: 'long',
@@ -463,7 +414,6 @@ function renderCalendar(year, month) {
     // převod smeny na text
     const shiftValue = smena[shiftDayIndex];
     shiftText = shifts[shiftValue];
-
     
      // svátky
     const key = `${day}-${month+1}`; // měsíc +1 protože Date.getMonth() je 0-based
@@ -493,11 +443,7 @@ function renderCalendar(year, month) {
   btnEdit.disabled = true;
   btnEdit.style.pointerEvents = 'none';
 
-  // Pomocná funkce pro formátování ISO bez posunu
-  function formatDateISO(year, month, day) {
-    return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  }
-
+  
   dayCells.forEach(cell => {
     if (cell.textContent.trim() !== '') {
       cell.addEventListener('click', () => {
@@ -514,7 +460,7 @@ function renderCalendar(year, month) {
 
         // Zobraz vybraný den a načti data
         showSelectedDay(selectedDateISO, shiftText);
-        console.log("Zobrazený den2:", selectedDateISO, shiftText);
+        //console.log("Zobrazený den2:", selectedDateISO, shiftText);
         loadDayData(selectedDateISO);
         
         // Přidej zvýraznění na kliknutý den
@@ -527,16 +473,17 @@ function renderCalendar(year, month) {
       });
     }
   });
-
+/*
   // Kliknutí mimo kalendář = zrušení výběru
-document.addEventListener('click', e => {
-  if (!calendar.contains(e.target) && !btnEdit.contains(e.target)) {
-    dayCells.forEach(c => c.classList.remove('selected'));
-    selectedDay = null;
-    btnEdit.disabled = true;
-    btnEdit.style.pointerEvents = 'none';
-  }
-});
+  document.addEventListener('click', e => {
+    if (!calendar.contains(e.target) && !btnEdit.contains(e.target)) {
+      dayCells.forEach(c => c.classList.remove('selected'));
+      selectedDay = null;
+      btnEdit.disabled = true;
+      btnEdit.style.pointerEvents = 'none';
+    }
+  });
+*/
 }
 
 // ===================================
@@ -544,11 +491,6 @@ document.addEventListener('click', e => {
 // ===================================
 function animateCalendarUpdate(callback) {
   const calendar = document.getElementById('calendar');
-
-  // Načtení hodin při renderu kalendáře
-  loadHours(new Date().toISOString().split("T")[0]).then(entry => {
-  //console.log("Načtené hodiny při renderu kalendáře:", entry);
-  });
 
   calendar.classList.add('fade-out');
 
