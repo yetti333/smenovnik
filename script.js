@@ -122,6 +122,19 @@ function showScreen(screen) {
           btnEditEl.disabled = true;
           btnEditEl.style.pointerEvents = 'none';
         }
+        // also show info panel if selection belongs to this month
+        try {
+          const parts = savedSelectedDate.split('-');
+          const selYear = parseInt(parts[0], 10);
+          const selMonth = parseInt(parts[1], 10) - 1;
+          if (selYear === currentYear && selMonth === currentMonth) {
+            showDayInfoPanel(savedSelectedDate);
+          } else {
+            hideDayInfoPanel();
+          }
+        } catch (e) {
+          hideDayInfoPanel();
+        }
       }
     });
   }
@@ -153,6 +166,95 @@ function showSelectedDay(dateString) {
 
   document.getElementById('selected-date').textContent = formatted;
   document.getElementById('selected-shift').textContent = shiftText;
+}
+
+// Helper: get day data (from DB or defaults)
+async function getDayData(dateKey) {
+  const db = await openDB();
+  const tx = db.transaction('days', 'readonly');
+  const store = tx.objectStore('days');
+
+  return new Promise((resolve) => {
+    const req = store.get(dateKey);
+    req.onsuccess = () => {
+      const data = req.result;
+      if (data) {
+        resolve({
+          hours: data.hours || '0',
+          overtime: data.overtime || '0',
+          shift: data.shift || '',
+          note: data.note || ''
+        });
+      } else {
+        // default values from localStorage
+        const dateObj = new Date(dateKey);
+        const weekday = dateObj.getDay();
+        const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
+        const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
+        // compute shift text from rotation arrays
+        const year = dateObj.getFullYear();
+        const month = dateObj.getMonth();
+        const day = dateObj.getDate();
+        const smena = getShiftArray();
+        const shiftDayStart = daysBetween(new Date(year, month, 1));
+        const shiftDayIndex = (shiftDayStart + day - 1) % 28;
+        const shiftTextLocal = shifts[smena[shiftDayIndex]] || '';
+        resolve({
+          hours: defaultHours,
+          overtime: defaultOvertime,
+          shift: shiftTextLocal,
+          note: ''
+        });
+      }
+    };
+    req.onerror = () => resolve({ hours: '0', overtime: '0', shift: '', note: '' });
+  });
+}
+
+// Info panel controls
+function showDayInfoPanel(dateKey) {
+  if (!dateKey) return hideDayInfoPanel();
+  // ensure it's in the current month/year
+  try {
+    const parts = dateKey.split('-');
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    if (y !== currentYear || m !== currentMonth) return hideDayInfoPanel();
+  } catch (e) {
+    return hideDayInfoPanel();
+  }
+
+  getDayData(dateKey).then(data => {
+    document.getElementById('info-hours').textContent = data.hours;
+    document.getElementById('info-overtime').textContent = data.overtime;
+    document.getElementById('info-shift').textContent = data.shift;
+
+    // header: formatted date + shift
+    const dateObjHeader = new Date(dateKey);
+    const headerStr = `${dateObjHeader.getDate()}.${dateObjHeader.getMonth()+1}.${dateObjHeader.getFullYear()} — ${data.shift}`;
+    const headerEl = document.getElementById('info-header');
+    if (headerEl) headerEl.textContent = headerStr;
+
+    // holiday text
+    const dateObj = new Date(dateKey);
+    const key = `${dateObj.getDate()}-${dateObj.getMonth()+1}`;
+    let holidayText = '';
+    if (svatky[key]) holidayText = svatky[key];
+    else if (velikonoce[dateObj.getFullYear()] && velikonoce[dateObj.getFullYear()][key]) holidayText = velikonoce[dateObj.getFullYear()][key];
+    document.getElementById('info-holiday').textContent = holidayText;
+
+    const panel = document.getElementById('day-info-panel');
+    if (panel) panel.classList.remove('hidden');
+  }).catch(err => {
+    console.error('Failed to populate day info panel', err);
+  });
+}
+
+function hideDayInfoPanel() {
+  const panel = document.getElementById('day-info-panel');
+  if (panel) panel.classList.add('hidden');
+  const headerEl = document.getElementById('info-header');
+  if (headerEl) headerEl.textContent = '\u00A0';
 }
 
 // Otevření IndexedDB
@@ -479,6 +581,24 @@ function renderCalendar(year, month) {
       }
     })();
   }
+  // show/hide info panel depending on whether the stored selection is in this month
+  const savedSel = currentSelectedDateRender;
+  if (savedSel) {
+    try {
+      const p = savedSel.split('-');
+      const sy = parseInt(p[0], 10);
+      const sm = parseInt(p[1], 10) - 1;
+      if (sy === year && sm === month) {
+        showDayInfoPanel(savedSel);
+      } else {
+        hideDayInfoPanel();
+      }
+    } catch (e) {
+      hideDayInfoPanel();
+    }
+  } else {
+    hideDayInfoPanel();
+  }
   
   dayCells.forEach(cell => {
     if (cell.textContent.trim() !== '') {
@@ -503,6 +623,8 @@ function renderCalendar(year, month) {
         // Deaktivuj tlačítko Editovat
         btnEdit.disabled = true;
         btnEdit.style.pointerEvents = 'none';
+        // skryj info panel taky
+        hideDayInfoPanel();
         if (navigator.vibrate) navigator.vibrate(vibr);
         return; // ukonči funkci
       }
@@ -538,6 +660,8 @@ function renderCalendar(year, month) {
       // Aktivuj tlačítko Editovat
       btnEdit.disabled = false;
       btnEdit.style.pointerEvents = 'auto';
+      // zobraz info panel pro vybraný den (pokud se nacházíme v tomto měsíci)
+      showDayInfoPanel(selectedDateISO);
       if (navigator.vibrate) navigator.vibrate(vibr);
     });
    }

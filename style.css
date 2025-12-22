@@ -399,6 +399,28 @@ body.edit-open .action-bar {
   background: var(--accent-hover, #1b7ed0);
 }
 
+/* === Day info panel === */
+.info-panel {
+  margin:1.2rem 0.5rem 6rem; /* larger gap so the panel sits clearly below the calendar */
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  background: var(--bg); /* same background as main UI / calendar cells */
+  color: var(--text);
+  border: 2px solid var(--accent); /* blue accent border matching setting buttons */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  font-size: 1.1rem;
+}
+.info-panel.hidden { display: none; }
+.info-row { margin: 0.2rem 0; }
+.info-row.small { font-size: 0.95rem; opacity: 0.9; margin-top: 0.6rem; }
+
+/* header inside info panel */
+.info-header {
+  font-size: 1.2rem;
+  margin-bottom: 0.2rem;
+  color: var(--accent);
+}
+
 /* === Akční lišta === */
 .action-bar {
   position: fixed;
