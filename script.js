@@ -103,6 +103,26 @@ function showScreen(screen) {
           }
         });
       }
+      // Update btn-edit enabled state: enable only if the saved date is in the currently displayed month/year
+      const btnEditEl = document.getElementById('btn-edit');
+      if (btnEditEl) {
+        try {
+          const parts = savedSelectedDate.split('-');
+          const selYear = parseInt(parts[0], 10);
+          const selMonth = parseInt(parts[1], 10) - 1;
+          if (selYear === currentYear && selMonth === currentMonth) {
+            btnEditEl.disabled = false;
+            btnEditEl.style.pointerEvents = 'auto';
+          } else {
+            btnEditEl.disabled = true;
+            btnEditEl.style.pointerEvents = 'none';
+          }
+        } catch (e) {
+          // if parsing fails, keep button disabled
+          btnEditEl.disabled = true;
+          btnEditEl.style.pointerEvents = 'none';
+        }
+      }
     });
   }
 }
@@ -427,6 +447,38 @@ function renderCalendar(year, month) {
   const btnEdit = document.getElementById('btn-edit');
   
   updateEditButtonState();
+  // If hours view is active, populate the hours for visible month (preserve until user toggles btn-hours)
+  if (document.body.classList.contains('show-hours') || localStorage.getItem("btn-hours-on")) {
+    const hoursCells = calendar.querySelectorAll('.day-hours');
+    (async () => {
+      try {
+        const db = await openDB();
+        const tx = db.transaction('days', 'readonly');
+        const store = tx.objectStore('days');
+
+        hoursCells.forEach(cell => {
+          const dateKey = cell.getAttribute('data-date');
+          const request = store.get(dateKey);
+          request.onsuccess = () => {
+            const data = request.result;
+            if ((data && data.hours) || (data && data.overtime)) {
+              const totalHours = parseFloat(data.hours) + parseFloat(data.overtime || "0");
+              cell.textContent = totalHours;
+            } else {
+              const dateObj = new Date(dateKey);
+              const weekday = dateObj.getDay();
+              const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
+              const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
+              const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
+              cell.textContent = totalHours;
+            }
+          };
+        });
+      } catch (e) {
+        console.error('Error populating hours for month:', e);
+      }
+    })();
+  }
   
   dayCells.forEach(cell => {
     if (cell.textContent.trim() !== '') {
@@ -451,6 +503,7 @@ function renderCalendar(year, month) {
         // Deaktivuj tlačítko Editovat
         btnEdit.disabled = true;
         btnEdit.style.pointerEvents = 'none';
+        if (navigator.vibrate) navigator.vibrate(vibr);
         return; // ukonči funkci
       }
             
@@ -490,25 +543,27 @@ function renderCalendar(year, month) {
    }
   });
 
-  // Kliknutí mimo kalendář = zrušení výběru
-  document.addEventListener('click', e => {
-    if (!calendar.contains(e.target) && !btnEdit.contains(e.target)) {
-      dayCells.forEach(c => c.classList.remove('selected'));
-      selectedDay = null;
+  // (Removed global outside-click deselect handler)
+
+  function updateEditButtonState() {
+    const savedSelectedDate = localStorage.getItem("selectedDate") || currentSelectedDate;
+    if (savedSelectedDate) {
+      // savedSelectedDate is in format YYYY-MM-DD
+      const parts = savedSelectedDate.split('-');
+      const selYear = parseInt(parts[0], 10);
+      const selMonth = parseInt(parts[1], 10) - 1; // zero-based month
+      // enable only if the selected date belongs to the currently rendered month/year
+      if (selYear === year && selMonth === month) {
+        btnEdit.disabled = false;
+        btnEdit.style.pointerEvents = 'auto';
+      } else {
+        btnEdit.disabled = true;
+        btnEdit.style.pointerEvents = 'none';
+      }
+    } else {
       btnEdit.disabled = true;
       btnEdit.style.pointerEvents = 'none';
     }
-  });
-
-  function updateEditButtonState() {
-  const savedSelectedDate = localStorage.getItem("selectedDate") || currentSelectedDate;
-  if (savedSelectedDate) {
-    btnEdit.disabled = false;
-    btnEdit.style.pointerEvents = 'auto';
-  } else {
-    btnEdit.disabled = true;
-    btnEdit.style.pointerEvents = 'none';
-  }
 }
 }
 
@@ -517,7 +572,10 @@ function renderCalendar(year, month) {
 // ===================================
 function animateCalendarUpdate(callback) {
   const calendar = document.getElementById('calendar');
-  localStorage.removeItem("selectedDate");
+  // keep stored selection so it persists when navigating back to the month
+  // only remove the visual selected state during the animation to avoid flicker
+  const prevSelected = calendar.querySelectorAll('.selected');
+  prevSelected.forEach(el => el.classList.remove('selected'));
 
   calendar.classList.add('fade-out');
 
@@ -576,18 +634,7 @@ function handleSwipeGesture() {
   }
 }
 
-// =============================
-//      ZRUŠENÍ VÝBĚRU DNŮ
-// ============================
-document.addEventListener('click', (e) => {
-  const calendar = document.getElementById('calendar');
-  const clickedInsideCalendarCell = e.target.closest('#calendar div');
-
-  if (!clickedInsideCalendarCell) {
-    const selected = calendar.querySelector('.selected');
-    if (selected) selected.classList.remove('selected');
-  }
-});
+// (Removed global click handler that cleared selection when clicking outside the calendar)
 
 // =============================
 //      POČET DNŮ MEZI DATY
