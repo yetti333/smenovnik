@@ -259,11 +259,14 @@ const btnHours = document.getElementById("btn-hours");
 const weekdayMapHours = ["sun-hours","mon-hours","tue-hours","wed-hours","thu-hours","fri-hours","sat-hours"];
 const weekdayMapOvertime = ["sun-overtime","mon-overtime","tue-overtime","wed-overtime","thu-overtime","fri-overtime","sat-overtime"];
 
+
 btnHours.addEventListener("click", async () => {
   document.body.classList.toggle("show-hours");
   btnHours.classList.toggle("active");
   if (navigator.vibrate) navigator.vibrate(vibr);
-
+  
+  //uloz do localstorage stav zmacknutí btm-hours
+  localStorage.setItem("btn-hours-on",true);
   const hoursCells = document.querySelectorAll(".day-hours");
 
   if (document.body.classList.contains("show-hours")) {
@@ -296,8 +299,9 @@ btnHours.addEventListener("click", async () => {
     });
   } else {
     // při skrytí vyčistíme buňky
+    localStorage.removeItem("btn-hours-on");
     hoursCells.forEach(cell => cell.textContent = "");
-  }
+    }
 });
 
 // =============================
@@ -484,6 +488,16 @@ function renderCalendar(year, month) {
       if (navigator.vibrate) navigator.vibrate(vibr);
     });
    }
+  });
+
+  // Kliknutí mimo kalendář = zrušení výběru
+  document.addEventListener('click', e => {
+    if (!calendar.contains(e.target) && !btnEdit.contains(e.target)) {
+      dayCells.forEach(c => c.classList.remove('selected'));
+      selectedDay = null;
+      btnEdit.disabled = true;
+      btnEdit.style.pointerEvents = 'none';
+    }
   });
 
   function updateEditButtonState() {
