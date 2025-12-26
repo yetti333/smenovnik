@@ -19,7 +19,7 @@ const smenaB = [1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1];
 const smenaC = [3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3];
 const smenaD = [0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2];
 const days = ["Neděle","Pondělí","Úterý","Středa","Čtvrtek","Pátek","Sobota"];
-const shifts = ["volno", "ranní směna", "odpolední směna", "noční směna"];
+const shifts = ["Volno", "Ranní", "Odpolední", "Noční"];
 
 // Seznam svátků s názvy
 const svatky = {
@@ -57,6 +57,29 @@ const actualDay = actualDate.getDate();
 const actualMonth = actualDate.getMonth();
 const actualYear = actualDate.getFullYear();
 const vibr = 7;
+
+function capitalizeFirst(str) {
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+// Map stored shift codes or values to display labels used in the edit form
+function formatShiftLabel(shiftVal) {
+  if (!shiftVal) return '';
+  const s = String(shiftVal).toLowerCase();
+  const map = {
+    'ranni': 'Ranní',
+    'odpoledni': 'Odpolední',
+    'nocni': 'Noční',
+    'volno': 'Volno',
+    'dovolena': 'Dovolená',
+    'nemoc': 'Nemoc',
+    'nahr': 'Náhradní volno'
+  };
+  if (map[s]) return map[s];
+  // if it's already a readable label (with diacritics), just capitalize
+  return capitalizeFirst(shiftVal);
+}
 
 // =========================
 //  PŘEPÍNÁNÍ OBRAZOVEK
@@ -165,7 +188,7 @@ function showSelectedDay(dateString) {
   const formatted = `${dayName} ${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()}`;
 
   document.getElementById('selected-date').textContent = formatted;
-  document.getElementById('selected-shift').textContent = shiftText;
+  document.getElementById('selected-shift').textContent = capitalizeFirst(shiftText);
 }
 
 // Helper: get day data (from DB or defaults)
@@ -179,32 +202,32 @@ async function getDayData(dateKey) {
     req.onsuccess = () => {
       const data = req.result;
       if (data) {
-        resolve({
-          hours: data.hours || '0',
-          overtime: data.overtime || '0',
-          shift: data.shift || '',
-          note: data.note || ''
-        });
+          resolve({
+            hours: data.hours || '0',
+            overtime: data.overtime || '0',
+            shift: data.shift || '',
+            note: data.note || '',
+            fromDB: true
+          });
       } else {
-        // default values from localStorage
-        const dateObj = new Date(dateKey);
-        const weekday = dateObj.getDay();
-        const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
-        const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
-        // compute shift text from rotation arrays
-        const year = dateObj.getFullYear();
-        const month = dateObj.getMonth();
-        const day = dateObj.getDate();
-        const smena = getShiftArray();
-        const shiftDayStart = daysBetween(new Date(year, month, 1));
-        const shiftDayIndex = (shiftDayStart + day - 1) % 28;
-        const shiftTextLocal = shifts[smena[shiftDayIndex]] || '';
-        resolve({
-          hours: defaultHours,
-          overtime: defaultOvertime,
-          shift: shiftTextLocal,
-          note: ''
-        });
+          // default values from localStorage, except when rotačně je to volno -> 0
+          const dateObj = new Date(dateKey);
+          const weekday = dateObj.getDay();
+          const year = dateObj.getFullYear();
+          const month = dateObj.getMonth();
+          const day = dateObj.getDate();
+          // compute shift text from rotation arrays and treat 'volno' days as zero hours
+          const smena = getShiftArray();
+          const shiftDayStart = daysBetween(new Date(year, month, 1));
+          const shiftDayIndex = (shiftDayStart + day - 1) % 28;
+          const shiftTextLocal = shifts[smena[shiftDayIndex]] || '';
+            if (smena[shiftDayIndex] === 0) {
+            resolve({ hours: '0', overtime: '0', shift: shiftTextLocal, note: '', fromDB: false });
+          } else {
+            const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
+            const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
+            resolve({ hours: defaultHours, overtime: defaultOvertime, shift: shiftTextLocal, note: '', fromDB: false });
+          }
       }
     };
     req.onerror = () => resolve({ hours: '0', overtime: '0', shift: '', note: '' });
@@ -225,13 +248,55 @@ function showDayInfoPanel(dateKey) {
   }
 
   getDayData(dateKey).then(data => {
+    // pokud existuje měsíční souhrn, skryj ho při zobrazení detailu dne (rychlejší než odstraňovat)
+    const existingSummary = document.getElementById('info-summary');
+    if (existingSummary) existingSummary.style.display = 'none';
+    // ujistíme se, že řádky 'Směna' a 'Poznámka' jsou viditelné pro detail dne
+    const shiftRow = document.getElementById('info-shift') ? document.getElementById('info-shift').parentElement : null;
+    const noteRow = document.getElementById('info-note') ? document.getElementById('info-note').parentElement : null;
+    if (shiftRow) shiftRow.style.display = '';
+    if (noteRow) noteRow.style.display = '';
+    // skryjeme řádek s celkovými hodinami při zobrazení detailu dne
+    const totalRow = document.getElementById('info-total') ? document.getElementById('info-total').parentElement : null;
+    if (totalRow) totalRow.style.display = 'none';
     document.getElementById('info-hours').textContent = data.hours;
     document.getElementById('info-overtime').textContent = data.overtime;
-    document.getElementById('info-shift').textContent = data.shift;
+    // Zobrazit směnu podle rotačního plánu pro daný den (ignorovat případné uložené přepsání)
+    // prefer DB-stored shift when present, otherwise show rotation-derived shift
+    let displayedShift = '';
+    try {
+      const dateObjShift = new Date(dateKey);
+      const smenaArr = getShiftArray();
+      const shiftDayStart = daysBetween(new Date(dateObjShift.getFullYear(), dateObjShift.getMonth(), 1));
+      const shiftDayIndex = (shiftDayStart + dateObjShift.getDate() - 1) % 28;
+      const shiftTextFromRotation = shifts[smenaArr[shiftDayIndex]] || '';
+      if (data.fromDB && data.shift) {
+        displayedShift = formatShiftLabel(data.shift);
+      } else {
+        // prefer rotation-derived label but fall back to stored value
+        displayedShift = formatShiftLabel(shiftTextFromRotation || data.shift);
+      }
+    } catch (e) {
+      displayedShift = formatShiftLabel(data.shift);
+    }
+    document.getElementById('info-shift').textContent = displayedShift;
 
     // header: formatted date + shift
     const dateObjHeader = new Date(dateKey);
-    const headerStr = `${dateObjHeader.getDate()}.${dateObjHeader.getMonth()+1}.${dateObjHeader.getFullYear()} — ${data.shift}`;
+    // use rotation-derived shift in header as well
+    // header: prefer DB shift, otherwise rotation
+    let headerShift = '';
+    try {
+      const sm = getShiftArray();
+      const shiftDayStartH = daysBetween(new Date(dateObjHeader.getFullYear(), dateObjHeader.getMonth(), 1));
+      const shiftDayIndexH = (shiftDayStartH + dateObjHeader.getDate() - 1) % 28;
+      const rot = shifts[sm[shiftDayIndexH]] || '';
+      if (data.fromDB && data.shift) headerShift = formatShiftLabel(data.shift);
+        else headerShift = formatShiftLabel(rot || data.shift);
+    } catch (e) {
+      headerShift = capitalizeFirst(data.shift);
+    }
+    const headerStr = `${headerShift} — ${dateObjHeader.getDate()}.${dateObjHeader.getMonth()+1}.${dateObjHeader.getFullYear()}`;
     const headerEl = document.getElementById('info-header');
     if (headerEl) headerEl.textContent = headerStr;
 
@@ -254,20 +319,110 @@ function showDayInfoPanel(dateKey) {
 }
 
 function hideDayInfoPanel() {
+  // místo skrytí panelu zobrazíme souhrn měsíce (panel zůstane vždy viditelný)
+  try {
+    showMonthSummary(currentYear, currentMonth);
+  } catch (e) {
+    const headerEl = document.getElementById('info-header');
+    if (headerEl) headerEl.textContent = '\u00A0';
+  }
+}
+
+// Zobrazí souhrn pro zadaný měsíc (celkové odpracované hodiny + rozpis)
+async function showMonthSummary(year, month) {
   const panel = document.getElementById('day-info-panel');
-  if (panel) panel.classList.add('hidden');
+  if (!panel) return;
+  panel.classList.remove('hidden');
+
+  const monthStart = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const monthName = monthStart.toLocaleString('cs-CZ', { month: 'long' });
+  const monthNameCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
   const headerEl = document.getElementById('info-header');
-  if (headerEl) headerEl.textContent = '\u00A0';
-  const noteEl = document.getElementById('info-note');
-  if (noteEl) noteEl.textContent = '—';
+  if (headerEl) headerEl.textContent = `${monthNameCap} ${year}`;
+
   const holidayEl = document.getElementById('info-holiday');
-  if (holidayEl) holidayEl.textContent = '\u00A0';
+  if (holidayEl) holidayEl.textContent = '';
+  const totalEl = document.getElementById('info-total');
+  if (totalEl) totalEl.textContent = '—';
+
+  // otevřeme DB a spočítáme součty
+  let totalNormal = 0;
+  let totalOvertime = 0;
+  try {
+    const db = await openDB();
+    const tx = db.transaction('days', 'readonly');
+    const store = tx.objectStore('days');
+
+    const promises = [];
+    for (let day = 1; day <= lastDay; day++) {
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      promises.push(new Promise((resolve) => {
+        const req = store.get(dateKey);
+        req.onsuccess = () => {
+          const data = req.result;
+          if (data && (data.hours || data.overtime)) {
+            resolve({ hours: parseFloat(data.hours || 0), overtime: parseFloat(data.overtime || 0) });
+          } else {
+            const dateObj = new Date(dateKey);
+            // pokud je podle rotačního plánu daný den 'volno', započítáváme 0 hodin
+            try {
+              const sm = getShiftArray();
+              const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+              const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+              if (sm[shiftDayIndex] === 0) {
+                resolve({ hours: 0, overtime: 0 });
+                return;
+              }
+            } catch (e) {
+              // ignore and fall back to defaults
+            }
+            const weekday = dateObj.getDay();
+            const defaultHours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+            const defaultOvertime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
+            resolve({ hours: defaultHours, overtime: defaultOvertime });
+          }
+        };
+        req.onerror = () => resolve({ hours: 0, overtime: 0 });
+      }));
+    }
+
+    const results = await Promise.all(promises);
+    results.forEach(r => {
+      totalNormal += Number(r.hours) || 0;
+      totalOvertime += Number(r.overtime) || 0;
+    });
+  } catch (e) {
+    // v případě chyby použijeme 0
+    console.error('Chyba při počítání měsíčních součtů', e);
+  }
+
+  const totalAll = totalNormal + totalOvertime;
+
   const hoursEl = document.getElementById('info-hours');
-  if (hoursEl) hoursEl.textContent = '—';
   const overtimeEl = document.getElementById('info-overtime');
-  if (overtimeEl) overtimeEl.textContent = '—';
   const shiftEl = document.getElementById('info-shift');
-  if (shiftEl) shiftEl.textContent = '—';
+  const noteEl = document.getElementById('info-note');
+
+  // Zobrazíme: pod nadpisem Celkem odpracované hodiny (stejným stylem jako ostatní řádky), poté graf a rozpis
+  if (totalEl) {
+    totalEl.textContent = formatHours(totalAll);
+    if (totalEl.parentElement) totalEl.parentElement.style.display = '';
+  }
+  if (hoursEl) hoursEl.textContent = formatHours(totalNormal);
+  if (overtimeEl) overtimeEl.textContent = formatHours(totalOvertime);
+  // skryjeme řádky směny a poznámky pro měsíční souhrn
+  if (shiftEl && shiftEl.parentElement) shiftEl.parentElement.style.display = 'none';
+  if (noteEl && noteEl.parentElement) noteEl.parentElement.style.display = 'none';
+
+  // No graphical summary: only textual totals are displayed
+}
+
+function formatHours(n) {
+  if (!isFinite(n)) return '0';
+  if (Math.abs(Math.round(n) - n) < 1e-9) return String(Math.round(n));
+  return String(Number(n.toFixed(2)));
 }
 
 // Otevření IndexedDB
@@ -422,13 +577,21 @@ btnHours.addEventListener("click", async () => {
           const totalHours = parseFloat(data.hours) + parseFloat(data.overtime || "0");
           cell.textContent = totalHours;
         } else {
-            // kdyz v WorkHoursDB nic není, tak načteme defaultní hodnotu z localStorage z defaultních hodin
-            const dateObj = new Date(dateKey);
-            const weekday = dateObj.getDay(); // 0 = neděle, 1 = pondělí, ...
-            const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
-            const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
-            const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
-            cell.textContent = totalHours;
+              // když v DB nic není, ale den je podle rotace 'volno', pak nezobrazujeme žádné defaultní hodiny
+              const dateObj = new Date(dateKey);
+              const sm = getShiftArray();
+              const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+              const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+              if (sm[shiftDayIndex] === 0) {
+                // volno — neukazovat žádné hodiny
+                cell.textContent = "";
+              } else {
+                const weekday = dateObj.getDay(); // 0 = neděle, 1 = pondělí, ...
+                const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
+                const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
+                const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
+                cell.textContent = totalHours;
+              }
           }
         };
     });
@@ -474,11 +637,10 @@ function renderCalendar(year, month) {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   }
 
-  // Zobrazit název měsíce a rok
-  monthYear.textContent = firstDay.toLocaleString('cs-CZ', {
-    month: 'long',
-    year: 'numeric'
-  });
+  // Zobrazit název měsíce (první písmeno velké) a rok
+  const monthName = firstDay.toLocaleString('cs-CZ', { month: 'long' });
+  const monthNameCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+  monthYear.textContent = `${monthNameCap} ${year}`;
   
   // Zakázat tlačítko předchozí měsíc pro listopad 2025
  if (year === 2025 && month === 10) {
@@ -580,12 +742,20 @@ function renderCalendar(year, month) {
               const totalHours = parseFloat(data.hours) + parseFloat(data.overtime || "0");
               cell.textContent = totalHours;
             } else {
+              // pokud je podle rotace volno, nezobrazujeme defaultní hodiny
               const dateObj = new Date(dateKey);
-              const weekday = dateObj.getDay();
-              const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
-              const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
-              const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
-              cell.textContent = totalHours;
+              const sm = getShiftArray();
+              const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+              const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+              if (sm[shiftDayIndex] === 0) {
+                cell.textContent = "";
+              } else {
+                const weekday = dateObj.getDay();
+                const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
+                const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
+                const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
+                cell.textContent = totalHours;
+              }
             }
           };
         });
@@ -656,18 +826,10 @@ function renderCalendar(year, month) {
 
       // Zobraz vybraný den do nadpisu a edit-screen
       showSelectedDay(selectedDateISO, selectedShiftValue);
-      if (currentSelectedDate !== "") {
-        monthYear.textContent = firstDay.toLocaleString('cs-CZ', {
-          month: 'long',
-          year: 'numeric'
-        });
-        monthYear.textContent += ` - ${shiftText}`;
-      } else {
-        monthYear.textContent = firstDay.toLocaleString('cs-CZ', {
-          month: 'long',
-          year: 'numeric'
-        });
-      }
+      // vždy zobrazíme pouze měsíc (s velkým počátečním písmenem) a rok — bez směny
+      const clickedMonthName = firstDay.toLocaleString('cs-CZ', { month: 'long' });
+      const clickedMonthNameCap = clickedMonthName.charAt(0).toUpperCase() + clickedMonthName.slice(1);
+      monthYear.textContent = `${clickedMonthNameCap} ${firstDay.getFullYear()}`;
       // Načti data pro vybraný den     
       loadDayData(selectedDateISO);
       // Aktivuj tlačítko Editovat
@@ -931,6 +1093,45 @@ shiftControl.addEventListener("click", (e) => {
   activateSegment(shiftControl, activeShift);
   renderCalendar(currentYear, currentMonth);
 });
+
+// Reset dat - vymaže IndexedDB 'days' a vybrané položky localStorage
+const btnReset = document.getElementById('btn-reset-data');
+if (btnReset) {
+  btnReset.addEventListener('click', async () => {
+    const ok = confirm('Opravdu chcete smazat všechna data? Tato akce je nevratná.');
+    if (!ok) return;
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    try {
+      // clear IndexedDB 'days' store
+      const db = await openDB();
+      const tx = db.transaction('days', 'readwrite');
+      const store = tx.objectStore('days');
+      const clearReq = store.clear();
+      await new Promise((resolve, reject) => {
+        clearReq.onsuccess = () => resolve();
+        clearReq.onerror = () => reject(clearReq.error);
+      });
+    } catch (e) {
+      console.error('Chyba při vymazávání IndexedDB', e);
+    }
+
+    // odstranit relevantní položky z localStorage
+    try {
+      const keys = [];
+      weekdayMapHours.forEach(k => keys.push(k));
+      weekdayMapOvertime.forEach(k => keys.push(k));
+      ['shift','theme','selectedDate','btn-hours-on'].forEach(k => keys.push(k));
+      keys.forEach(k => localStorage.removeItem(k));
+    } catch (e) {
+      console.error('Chyba při vymazávání localStorage', e);
+    }
+
+    // refresh UI
+    renderCalendar(currentYear, currentMonth);
+    try { showMonthSummary(currentYear, currentMonth); } catch(e){}
+    alert('Data byla smazána.');
+  });
+}
 
 // =============================
 //      INICIALIZACE KALENDÁŘE

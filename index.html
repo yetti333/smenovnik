@@ -37,8 +37,9 @@
         <!-- Panel s informacemi o vybraném dni (vložen do scrollable containeru, pod grid) -->
         <div id="day-info-panel" class="info-panel hidden">
           <div class="info-row info-header"><strong id="info-header">&nbsp;</strong></div>
-          <div class="info-row small"><em id="info-holiday">&nbsp;</em></div>
-          <div class="info-row"><strong>Pracovní hodiny:</strong> <span id="info-hours">—</span></div>
+          <div class="info-row"><strong>Celkem odpracované hodiny:</strong> <span id="info-total">—</span></div>
+          <div class="info-row small"><em id="info-holiday"></em></div>
+          <div class="info-row"><strong>Normální hodiny:</strong> <span id="info-hours">—</span></div>
           <div class="info-row"><strong>Přesčasy:</strong> <span id="info-overtime">—</span></div>
           <div class="info-row"><strong>Směna:</strong> <span id="info-shift">—</span></div>
           <div class="info-row"><strong>Poznámka:</strong> <span id="info-note">—</span></div>
@@ -84,18 +85,25 @@
           <button data-value="D">D</button>
         </div>
       </section>
+
+      <!-- Reset dat -->
+      <section class="settings-section">
+        <h3>Data</h3>
+        <button id="btn-reset-data">Resetovat data</button>
+        <p class="muted">Vymaže všechna uložená data (IndexedDB + vybrané položky localStorage).</p>
+      </section>
     </div>
 
     <!-- Hodiny -->
 <div id="hours" class="tab-pane active">
   <section class="settings-section">
-    <h2>Základní nastavení pracovních hodin pro jednotlivé směnové dny</h2>
+    <h2>Základní nastavení odpracovaných hodin pro jednotlivé směnové dny</h2>
     
     <table class="hours-table">
       <thead>
         <tr>
           <th>Den</th>
-          <th>Pracovní hodiny</th>
+          <th>Odpracované hodiny</th>
           <th>Přesčasy</th>
         </tr>
       </thead>
@@ -158,7 +166,7 @@
   <form id="hours-form" class="hours-form">
     <!-- Standardní pracovní hodiny -->
     <div class="form-group">
-      <label for="day-hours">Pracovní hodiny:</label>
+      <label for="day-hours">Odpracované hodiny:</label>
       <input type="number" step="0.5" min="0" id="day-hours" value="7.5">
     </div>
 

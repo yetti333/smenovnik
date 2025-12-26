@@ -55,16 +55,20 @@ html, body {
 #calendar-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 1rem;
+  background: #fff9c4; /* bledě žluté pozadí pod hlavičkou */
+  border: 2px solid var(--accent, #2196f3); /* modré orámování jako u tlačítek */
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
 }
 
 #month-year {
-  flex: 1;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   margin: 0;
   text-align: center;
-  color: #2196f3;
+  color: var(--accent, #2196f3);
+  font-weight: 600;
 }
 
 /* === Grid === */
@@ -106,6 +110,12 @@ html, body {
 .calendar-grid div:empty {
   visibility: hidden;
 }
+
+/* small number styling to keep layout neat */
+.day-number { font-size: 0.95rem; font-weight: 600; }
+
+/* === Info panel summary graphics === */
+/* (Removed graphical month summary bar — textual totals used instead) */
 
 /* === Typy směn === */
 .calendar-grid div.ranni { background-color: #F9F6B3; }
@@ -399,6 +409,21 @@ body.edit-open .action-bar {
   background: var(--accent-hover, #1b7ed0);
 }
 
+/* Reset button in settings */
+#btn-reset-data {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+#btn-reset-data:hover { background: #c62828; }
+.muted { color: #666; font-size: 0.9rem; margin-top: 0.4rem; }
+
 /* === Day info panel === */
 .info-panel {
   margin:1.2rem 0.5rem 6rem; /* larger gap so the panel sits clearly below the calendar */
@@ -425,9 +450,12 @@ body.edit-open .action-bar {
   color: #d32f2f; /* red */
   display: block; /* make it block so vertical margins apply */
   margin-top: 0; /* attach holiday to header (no gap above) */
-  margin-bottom: 1rem; /* larger gap below before other rows */
+  margin-bottom: 0.2rem; /* smaller gap below before other rows */
   font-weight: 600;
 }
+
+/* hide holiday line when empty (helps avoid gaps if script leaves it blank) */
+#info-holiday:empty { display: none; }
 
 /* === Akční lišta === */
 .action-bar {
