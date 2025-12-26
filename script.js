@@ -242,6 +242,9 @@ function showDayInfoPanel(dateKey) {
     if (svatky[key]) holidayText = svatky[key];
     else if (velikonoce[dateObj.getFullYear()] && velikonoce[dateObj.getFullYear()][key]) holidayText = velikonoce[dateObj.getFullYear()][key];
     document.getElementById('info-holiday').textContent = holidayText;
+    // note text
+    const noteEl = document.getElementById('info-note');
+    if (noteEl) noteEl.textContent = data.note || '\u00A0';
 
     const panel = document.getElementById('day-info-panel');
     if (panel) panel.classList.remove('hidden');
@@ -255,6 +258,16 @@ function hideDayInfoPanel() {
   if (panel) panel.classList.add('hidden');
   const headerEl = document.getElementById('info-header');
   if (headerEl) headerEl.textContent = '\u00A0';
+  const noteEl = document.getElementById('info-note');
+  if (noteEl) noteEl.textContent = '—';
+  const holidayEl = document.getElementById('info-holiday');
+  if (holidayEl) holidayEl.textContent = '\u00A0';
+  const hoursEl = document.getElementById('info-hours');
+  if (hoursEl) hoursEl.textContent = '—';
+  const overtimeEl = document.getElementById('info-overtime');
+  if (overtimeEl) overtimeEl.textContent = '—';
+  const shiftEl = document.getElementById('info-shift');
+  if (shiftEl) shiftEl.textContent = '—';
 }
 
 // Otevření IndexedDB

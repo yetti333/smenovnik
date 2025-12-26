@@ -412,13 +412,21 @@ body.edit-open .action-bar {
 }
 .info-panel.hidden { display: none; }
 .info-row { margin: 0.2rem 0; }
-.info-row.small { font-size: 0.95rem; opacity: 0.9; margin-top: 0.6rem; }
+.info-row.small { font-size: 0.95rem; opacity: 0.9; margin-top: 0; }
 
 /* header inside info panel */
 .info-header {
   font-size: 1.2rem;
   margin-bottom: 0.2rem;
   color: var(--accent);
+}
+/* holiday style directly under header */
+#info-holiday {
+  color: #d32f2f; /* red */
+  display: block; /* make it block so vertical margins apply */
+  margin-top: 0; /* attach holiday to header (no gap above) */
+  margin-bottom: 1rem; /* larger gap below before other rows */
+  font-weight: 600;
 }
 
 /* === Akční lišta === */
