@@ -157,9 +157,14 @@
 
   <!-- Obrazovka editace hodin vybraného dne -->
 <div id="edit-screen" class="screen">
+  
+  <header class="edit-header">
+    <h2>Editace dne</h2>
+  </header>
+
   <!-- Zobrazení vybraného dne -->
-  <div id="selected-day" class="selected-header">
-    <span id="selected-date"></span><br>
+  <div id="selected-day" class="edit-day-info">
+    <span id="selected-date"></span>
     <span id="selected-shift"></span>
   </div>
 
@@ -195,13 +200,12 @@
       <label for="day-note">Poznámka k dni:</label>
       <textarea id="day-note" rows="3" placeholder="Zapište poznámku..."></textarea>
     </div>
-
-    <!-- Akční tlačítka -->
-    <div class="form-actions">
-      <button type="button" id="btn-cancel">Storno</button>
-      <button type="submit" id="btn-ok">OK</button>
-    </div>
   </form>
+
+  <div class="edit-footer">
+    <button type="button" id="btn-cancel">Cancel</button>
+    <button type="submit" id="btn-ok">OK</button>
+  </div>
 </div>
   </div> <!-- ✅ konec wrapperu -->
 

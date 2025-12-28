@@ -192,6 +192,25 @@ html, body {
   font-weight: 600;
 }
 
+/* === Edit screen header === */
+.edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0.5rem;
+  background: #fff9c4;
+  border: 2px solid var(--accent, #2196f3);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.edit-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--accent, #2196f3);
+  font-weight: 600;
+}
+
 .settings-content {
   flex: 1;
   overflow-y: auto;
@@ -427,6 +446,31 @@ body.edit-open .action-bar {
   background: var(--accent-hover, #1b7ed0);
 }
 
+/* === Footer editace === */
+.edit-footer {
+  margin-top: auto;
+  padding: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.edit-footer button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  margin-right: 0.8rem;
+}
+
+.edit-footer button:hover {
+  background: var(--accent-hover, #1b7ed0);
+}
+
 /* Reset button in settings */
 #btn-reset-data {
   background: #e53935;
@@ -589,24 +633,10 @@ body.edit-open .action-bar {
 }
 
 /* OK tlačítko */
-#btn-ok {
-  background: #007aff;   /* typická iOS modrá */
-  color: #fff;
-}
-
-#btn-ok:hover {
-  background: #006ae6;
-}
+/* Removed - now using .edit-footer button styles */
 
 /* Storno tlačítko */
-#btn-cancel {
-  background: #f0f0f0;
-  color: #007aff;
-}
-
-#btn-cancel:hover {
-  background: #e0e0e0;
-}
+/* Removed - now using .edit-footer button styles */
 
 /* jemný efekt při kliknutí */
 .form-actions button:active {
@@ -632,9 +662,26 @@ body.edit-open .action-bar {
   margin-top: 20px;    /* odsazení od horního okraje */
 }
 
+/* === Edit day info (datum a směna pod hlavičkou) === */
+.edit-day-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0.5rem 1rem;
+  padding: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.edit-day-info span {
+  white-space: nowrap;
+}
 
 #selected-date, #selected-shift {
   color: #2196f3;
+  border-bottom: #2196f3 2px solid;
 }
 
 .hours-form {
@@ -674,22 +721,4 @@ textarea {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
-}
-
-#btn-cancel {
-  background-color: #ccc;
-  color: #333;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-#btn-ok {
-  background-color: #2196f3;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 4px;
-  cursor: pointer;
 }

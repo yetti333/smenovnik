@@ -197,7 +197,7 @@ function showSelectedDay(dateString) {
   const formatted = `${dayName} ${dateObj.getDate()}.${dateObj.getMonth()+1}.${dateObj.getFullYear()}`;
 
   document.getElementById('selected-date').textContent = formatted;
-  document.getElementById('selected-shift').textContent = capitalizeFirst(shiftText);
+  document.getElementById('selected-shift').textContent = shiftText.toLowerCase();
 }
 
 // Helper: get day data (from DB or defaults)
@@ -502,6 +502,7 @@ async function saveDayData(selectedDate) {
 
 const btnEditOk = document.getElementById('btn-ok').addEventListener('click', async (e) => {
   e.preventDefault();
+  if (navigator.vibrate) navigator.vibrate(vibr);
   const selectedDate = currentSelectedDate; // definováno při kliknutí na kalendář
   await saveDayData(selectedDate);
   // návrat na kalendář
@@ -511,6 +512,7 @@ const btnEditOk = document.getElementById('btn-ok').addEventListener('click', as
 
 const btnEditCancel = document.getElementById('btn-cancel').addEventListener('click', async (e) => {
   e.preventDefault();
+  if (navigator.vibrate) navigator.vibrate(vibr);
    // návrat na kalendář
   showScreen(calendarScreen);
   document.body.classList.remove("edit-open");
