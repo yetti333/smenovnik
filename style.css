@@ -123,6 +123,9 @@ html, body {
 .calendar-grid div.nocni { background-color: #B0D9EF; }
 .calendar-grid div.svatek { color: red; font-weight: bold; }
 
+/* Small red marker for holiday with zero hours in DB */
+.holiday-s { color: #d32f2f; font-weight: 700; }
+
 /* === Vybraný den === */
 .calendar-grid div.selected {
   /*background-color: #6defc8;*/

@@ -21,6 +21,15 @@ const smenaD = [0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2];
 const days = ["Neděle","Pondělí","Úterý","Středa","Čtvrtek","Pátek","Sobota"];
 const shifts = ["Volno", "Ranní", "Odpolední", "Noční"];
 
+// returns true when dateObj matches a holiday in svatky or velikonoce
+function isHoliday(dateObj) {
+  const key = `${dateObj.getDate()}-${dateObj.getMonth() + 1}`;
+  if (svatky[key]) return true;
+  const year = dateObj.getFullYear();
+  if (velikonoce[year] && velikonoce[year][key]) return true;
+  return false;
+}
+
 // Seznam svátků s názvy
 const svatky = {
   "1-1": "Nový rok",
@@ -572,10 +581,17 @@ btnHours.addEventListener("click", async () => {
 
       request.onsuccess = () => {
         const data = request.result;
-        if ((data && data.hours) || (data && data.overtime)) {
-          // zobrazíme uložené hodiny
-          const totalHours = parseFloat(data.hours) + parseFloat(data.overtime || "0");
-          cell.textContent = totalHours;
+        if (data) {
+          // použij data z DB (i pokud jsou nuly)
+          const totalHours = parseFloat(data.hours || 0) + parseFloat(data.overtime || 0);
+          const dateObj = new Date(dateKey);
+          if (isHoliday(dateObj) && totalHours === 0) {
+            cell.innerHTML = '<span class="holiday-s">S</span>';
+          } else if (totalHours === 0) {
+            cell.textContent = '0';
+          } else {
+            cell.textContent = totalHours;
+          }
         } else {
               // když v DB nic není, ale den je podle rotace 'volno', pak nezobrazujeme žádné defaultní hodiny
               const dateObj = new Date(dateKey);
@@ -738,9 +754,16 @@ function renderCalendar(year, month) {
           const request = store.get(dateKey);
           request.onsuccess = () => {
             const data = request.result;
-            if ((data && data.hours) || (data && data.overtime)) {
-              const totalHours = parseFloat(data.hours) + parseFloat(data.overtime || "0");
-              cell.textContent = totalHours;
+            if (data) {
+              const totalHours = parseFloat(data.hours || 0) + parseFloat(data.overtime || 0);
+              const dateObj = new Date(dateKey);
+              if (isHoliday(dateObj) && totalHours === 0) {
+                cell.innerHTML = '<span class="holiday-s">S</span>';
+              } else if (totalHours === 0) {
+                cell.textContent = '0';
+              } else {
+                cell.textContent = totalHours;
+              }
             } else {
               // pokud je podle rotace volno, nezobrazujeme defaultní hodiny
               const dateObj = new Date(dateKey);
