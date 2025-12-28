@@ -178,14 +178,18 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
-  background: var(--bg2);
-  border-bottom: 1px solid rgba(0,0,0,0.1);
+  margin: 1rem 0.5rem;
+  background: #fff9c4;
+  border: 2px solid var(--accent, #2196f3);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
 }
 
 .settings-header h2 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  color: var(--accent, #2196f3);
+  font-weight: 600;
 }
 
 .settings-content {
