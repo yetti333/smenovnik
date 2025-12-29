@@ -264,8 +264,11 @@ html, body {
   gap: 12px;
   justify-content: center;
   flex-wrap: nowrap;
-  margin: 1rem 0.5rem;
-  padding: 0 0.5rem;
+  margin: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
 .tab-header button {
@@ -425,50 +428,93 @@ body.edit-open .action-bar {
 /* === Footer nastavení === */
 .settings-footer {
   margin-top: auto;
-  padding: 1rem;
+  padding: 1.5rem;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  gap: 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
 }
 
 #btn-settings-ok, #btn-settings-cancel {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
+  flex: 1;
+  max-width: 150px;
+  padding: 0.85rem 1.5rem;
+  border-radius: 10px;
   font-size: 1rem;
   cursor: pointer;
   font-weight: 600;
-  margin-right: 0.8rem;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-#btn-settings-ok:hover, #btn-settings-cancel:hover {
-  background: var(--accent-hover, #1b7ed0);
+#btn-settings-ok {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+}
+
+#btn-settings-cancel {
+  background: white;
+  color: #6c757d;
+  border: 2px solid #dee2e6;
+}
+
+#btn-settings-ok:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+#btn-settings-cancel:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  transform: translateY(-2px);
 }
 
 /* === Footer editace === */
 .edit-footer {
   margin-top: auto;
-  padding: 1rem;
+  padding: 1.5rem;
   display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 1rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
 }
 
 .edit-footer button {
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
+  flex: 1;
+  max-width: 150px;
+  padding: 0.85rem 1.5rem;
+  border-radius: 10px;
   font-size: 1rem;
   cursor: pointer;
   font-weight: 600;
-  margin-right: 0.8rem;
+  border: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.edit-footer button:hover {
-  background: var(--accent-hover, #1b7ed0);
+#btn-ok {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+}
+
+#btn-cancel {
+  background: white;
+  color: #6c757d;
+  border: 2px solid #dee2e6;
+}
+
+#btn-ok:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+#btn-cancel:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  transform: translateY(-2px);
 }
 
 /* Reset button in settings */
@@ -695,27 +741,33 @@ body.edit-open .action-bar {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  margin: 0.5rem 0.5rem 1rem;
-  padding: 0.5rem;
-  font-size: 1.3rem;
-  font-weight: 500;
-  color: #555;
+  gap: 1rem;
+  margin: 1rem 1rem 1.5rem;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .edit-day-info span {
   white-space: nowrap;
+  color: white;
 }
 
 #selected-date, #selected-shift {
-  color: #2196f3;
-  border-bottom: #2196f3 2px solid;
+  color: white;
+  border-bottom: none;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .hours-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
+  padding: 0 1rem;
 }
 
 .form-group {
@@ -725,26 +777,44 @@ body.edit-open .action-bar {
 
 .form-grid {
   display: grid;
-  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr); /* pevné minimum podle nejdelšího textu */
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr);
   gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
 }
 
 label {
-  font-weight: 500;
-  margin-bottom: 0.3rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #495057;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 input, select, textarea {
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 0.75rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #2196f3;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
 }
 
 textarea {
   resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
 }
 
 .form-actions {
