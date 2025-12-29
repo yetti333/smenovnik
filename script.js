@@ -508,6 +508,8 @@ const btnEditOk = document.getElementById('btn-ok').addEventListener('click', as
   // návrat na kalendář
   showScreen(calendarScreen);
   document.body.classList.remove("edit-open");
+  // Re-render calendar to show updated D markers and hours from DB changes
+  renderCalendar(currentYear, currentMonth);
 });
 
 const btnEditCancel = document.getElementById('btn-cancel').addEventListener('click', async (e) => {
@@ -583,16 +585,20 @@ btnHours.addEventListener("click", async () => {
 
       request.onsuccess = () => {
         const data = request.result;
+        const dayCell = cell.parentElement;
         if (data) {
           // použij data z DB (i pokud jsou nuly)
           const totalHours = parseFloat(data.hours || 0) + parseFloat(data.overtime || 0);
-          const dateObj = new Date(dateKey);
-          if (isHoliday(dateObj) && totalHours === 0) {
-            cell.innerHTML = '<span class="holiday-s">S</span>';
-          } else if (totalHours === 0) {
+          if (totalHours === 0) {
             cell.textContent = '0';
           } else {
             cell.textContent = totalHours;
+          }
+          // Set vacation attribute for CSS-controlled D marker
+          if (data.shift === 'dovolena') {
+            dayCell.setAttribute('data-vacation', 'true');
+          } else {
+            dayCell.removeAttribute('data-vacation');
           }
         } else {
               // když v DB nic není, ale den je podle rotace 'volno', pak nezobrazujeme žádné defaultní hodiny
@@ -610,6 +616,8 @@ btnHours.addEventListener("click", async () => {
                 const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
                 cell.textContent = totalHours;
               }
+              // Without DB record, ensure vacation attribute is cleared
+              dayCell.removeAttribute('data-vacation');
           }
         };
     });
@@ -717,13 +725,11 @@ function renderCalendar(year, month) {
     
      // svátky
     const key = `${day}-${month+1}`; // měsíc +1 protože Date.getMonth() je 0-based
-    if (svatky[key]) {
+    const isHolidayDay = svatky[key] || (velikonoce[year] && velikonoce[year][key]);
+    if (isHolidayDay) {
       classes += ' svatek';
-      tooltip = svatky[key];
-    }  else if (velikonoce[year] && velikonoce[year][key]) {
-              classes += ' svatek';
-              tooltip = velikonoce[year][key];
-      }
+      tooltip = isHolidayDay;
+    }
     
     const dateKey = formatDateISO(year, month, day);
     
@@ -732,6 +738,8 @@ function renderCalendar(year, month) {
       <div class="day ${classes.trim()}" title="${tooltip}">
         <span class="day-number">${day}</span>
         <span class="day-hours" data-date="${dateKey}"></span>
+        ${isHolidayDay ? '<span class="day-holiday-marker">S</span>' : ''}
+        <span class="day-vacation-marker">D</span>
       </div>
     `;
   }
@@ -756,15 +764,19 @@ function renderCalendar(year, month) {
           const request = store.get(dateKey);
           request.onsuccess = () => {
             const data = request.result;
+            const dayCell = cell.parentElement;
             if (data) {
               const totalHours = parseFloat(data.hours || 0) + parseFloat(data.overtime || 0);
-              const dateObj = new Date(dateKey);
-              if (isHoliday(dateObj) && totalHours === 0) {
-                cell.innerHTML = '<span class="holiday-s">S</span>';
-              } else if (totalHours === 0) {
+              if (totalHours === 0) {
                 cell.textContent = '0';
               } else {
                 cell.textContent = totalHours;
+              }
+              // Set vacation attribute for CSS-controlled D marker
+              if (data.shift === 'dovolena') {
+                dayCell.setAttribute('data-vacation', 'true');
+              } else {
+                dayCell.removeAttribute('data-vacation');
               }
             } else {
               // pokud je podle rotace volno, nezobrazujeme defaultní hodiny
@@ -781,6 +793,8 @@ function renderCalendar(year, month) {
                 const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
                 cell.textContent = totalHours;
               }
+              // Without DB record, ensure vacation attribute is cleared
+              dayCell.removeAttribute('data-vacation');
             }
           };
         });
@@ -1059,6 +1073,8 @@ inputsDefaultHours.forEach(input => {
     showScreen(calendarScreen);
     document.body.classList.remove("settings-open");
     if (navigator.vibrate) navigator.vibrate(vibr);
+    // Re-render calendar to reflect any changes from settings
+    renderCalendar(currentYear, currentMonth);
   });
 
   // tlačítko Cancel vrátí hodnotu z localStorage
@@ -1071,6 +1087,8 @@ inputsDefaultHours.forEach(input => {
     showScreen(calendarScreen);
     document.body.classList.remove("settings-open");
     if (navigator.vibrate) navigator.vibrate(vibr);
+    // Re-render calendar to reflect any changes from settings
+    renderCalendar(currentYear, currentMonth);
   });
 });
 // ================================
