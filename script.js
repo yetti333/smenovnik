@@ -215,6 +215,8 @@ async function getDayData(dateKey) {
             hours: data.hours || '0',
             overtime: data.overtime || '0',
             shift: data.shift || '',
+            hoursShift: data.hoursShift || '',
+            overtimeShift: data.overtimeShift || '',
             note: data.note || '',
             fromDB: true
           });
@@ -230,16 +232,17 @@ async function getDayData(dateKey) {
           const shiftDayStart = daysBetween(new Date(year, month, 1));
           const shiftDayIndex = (shiftDayStart + day - 1) % 28;
           const shiftTextLocal = shifts[smena[shiftDayIndex]] || '';
+          const shiftCodeFromRotation = ["volno","ranni","odpoledni","nocni"][smena[shiftDayIndex]] || 'ranni';
             if (smena[shiftDayIndex] === 0) {
-            resolve({ hours: '0', overtime: '0', shift: shiftTextLocal, note: '', fromDB: false });
+            resolve({ hours: '0', overtime: '0', shift: shiftTextLocal, hoursShift: 'volno', overtimeShift: '', note: '', fromDB: false });
           } else {
             const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
             const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
-            resolve({ hours: defaultHours, overtime: defaultOvertime, shift: shiftTextLocal, note: '', fromDB: false });
+            resolve({ hours: defaultHours, overtime: defaultOvertime, shift: shiftTextLocal, hoursShift: shiftCodeFromRotation, overtimeShift: shiftCodeFromRotation, note: '', fromDB: false });
           }
       }
     };
-    req.onerror = () => resolve({ hours: '0', overtime: '0', shift: '', note: '' });
+    req.onerror = () => resolve({ hours: '0', overtime: '0', shift: '', hoursShift: '', overtimeShift: '', note: '' });
   });
 }
 
@@ -256,7 +259,7 @@ function showDayInfoPanel(dateKey) {
     return hideDayInfoPanel();
   }
 
-  getDayData(dateKey).then(data => {
+  return getDayData(dateKey).then(data => {
     // pokud existuje měsíční souhrn, skryj ho při zobrazení detailu dne (rychlejší než odstraňovat)
     const existingSummary = document.getElementById('info-summary');
     if (existingSummary) existingSummary.style.display = 'none';
@@ -270,6 +273,40 @@ function showDayInfoPanel(dateKey) {
     if (totalRow) totalRow.style.display = 'none';
     document.getElementById('info-hours').textContent = data.hours;
     document.getElementById('info-overtime').textContent = data.overtime;
+    
+    // Zobrazit typ směny pro normální hodiny
+    const shiftDisplayMap = {
+      'ranni': 'Ranní',
+      'odpoledni': 'Odpolední',
+      'nocni': 'Noční',
+      'volno': 'Volno',
+      'dovolena': 'Dovolená',
+      'nemoc': 'Nemoc',
+      'nahr': 'Náhradní volno'
+    };
+    
+    let hoursShiftDisplay = '';
+    if (data.fromDB && data.hoursShift) {
+      hoursShiftDisplay = shiftDisplayMap[data.hoursShift] || data.hoursShift;
+    } else {
+      // z rotace
+      hoursShiftDisplay = shiftDisplayMap[data.hoursShift] || '';
+    }
+    document.getElementById('hours-shift-info').textContent = hoursShiftDisplay ? `— ${hoursShiftDisplay.toLowerCase()}` : '';
+    
+    // Zobrazit typ směny pro přesčasy - POUZE pokud jsou přesčasy > 0
+    let overtimeShiftDisplay = '';
+    const overtimeValue = parseFloat(data.overtime) || 0;
+    if (overtimeValue > 0) {
+      if (data.fromDB && data.overtimeShift) {
+        overtimeShiftDisplay = shiftDisplayMap[data.overtimeShift] || data.overtimeShift;
+      } else {
+        // z rotace
+        overtimeShiftDisplay = shiftDisplayMap[data.overtimeShift] || '';
+      }
+    }
+    document.getElementById('overtime-shift-info').textContent = overtimeShiftDisplay ? `— ${overtimeShiftDisplay.toLowerCase()}` : '';
+    
     // Zobrazit směnu podle rotačního plánu pro daný den (ignorovat případné uložené přepsání)
     // prefer DB-stored shift when present, otherwise show rotation-derived shift
     let displayedShift = '';
@@ -355,6 +392,12 @@ async function showMonthSummary(year, month) {
   if (holidayEl) holidayEl.textContent = '';
   const totalEl = document.getElementById('info-total');
   if (totalEl) totalEl.textContent = '—';
+  
+  // Skrýt info o směnách pro normální hodiny a přesčasy (viditelné jen při detailu dne)
+  const hoursShiftInfoEl = document.getElementById('hours-shift-info');
+  if (hoursShiftInfoEl) hoursShiftInfoEl.textContent = '';
+  const overtimeShiftInfoEl = document.getElementById('overtime-shift-info');
+  if (overtimeShiftInfoEl) overtimeShiftInfoEl.textContent = '';
 
   // otevřeme DB a spočítáme součty
   let totalNormal = 0;
@@ -657,7 +700,7 @@ function getShiftArray() {
 // =============================
 //      RENDER KALENDÁŘE
 // ============================
-function renderCalendar(year, month) {
+async function renderCalendar(year, month) {
   const calendar = document.getElementById('calendar');
   const monthYear = document.getElementById('month-year');
   const prevButton = document.getElementById('btn-prev'); 
@@ -823,7 +866,7 @@ function renderCalendar(year, month) {
       const sy = parseInt(p[0], 10);
       const sm = parseInt(p[1], 10) - 1;
       if (sy === year && sm === month) {
-        showDayInfoPanel(savedSel);
+        await showDayInfoPanel(savedSel);
       } else {
         hideDayInfoPanel();
       }
