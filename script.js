@@ -463,20 +463,30 @@ async function loadDayData(selectedDate) {
     if (data) {
       // existuje záznam v IndexedDB
       document.getElementById('day-hours').value = data.hours;
+      document.getElementById('day-shift-hours').value = data.hoursShift || 'ranni';
       document.getElementById('day-overtime').value = data.overtime;
+      document.getElementById('day-shift-overtime').value = data.overtimeShift || 'ranni';
       document.getElementById('day-note').value = data.note || '';
-      document.getElementById('day-shift').value = data.shift;
     } else {
       // kdyz v WorkHoursDB nic není, tak načteme defaultní hodnotu z localStorage z defaultních hodin
       const dateObj = new Date(currentSelectedDate);
       const weekday = dateObj.getDay(); // 0 = neděle, 1 = pondělí, ...
       const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
       const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
+      
+      // Načti defaultní směnu z kalendáře (rotace)
+      const sm = getShiftArray();
+      const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+      const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+      const defaultShiftValue = sm[shiftDayIndex];
       const shiftMapSelector = ["volno","ranni","odpoledni","nocni"];
+      const defaultShift = shiftMapSelector[defaultShiftValue] || 'ranni';
+      
       document.getElementById('day-hours').value = defaultHours || '7.5';
+      document.getElementById('day-shift-hours').value = defaultShift;
       document.getElementById('day-overtime').value = defaultOvertime || '0';
+      document.getElementById('day-shift-overtime').value = defaultShift;
       document.getElementById('day-note').value = '';
-      document.getElementById('day-shift').value = shiftMapSelector[selectedShiftValue];
     }
   };
 }
@@ -490,9 +500,11 @@ async function saveDayData(selectedDate) {
   const data = {
     date: selectedDate,
     hours: document.getElementById('day-hours').value,
+    hoursShift: document.getElementById('day-shift-hours').value,
     overtime: document.getElementById('day-overtime').value,
+    overtimeShift: document.getElementById('day-shift-overtime').value,
     note: document.getElementById('day-note').value,
-    shift: document.getElementById('day-shift').value
+    shift: document.getElementById('day-shift-hours').value
   };
 
   store.put(data);

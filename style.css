@@ -725,7 +725,7 @@ body.edit-open .action-bar {
 
 .form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* dva sloupce */
+  grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr); /* pevné minimum podle nejdelšího textu */
   gap: 1rem;
 }
 
@@ -739,6 +739,8 @@ input, select, textarea {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 textarea {

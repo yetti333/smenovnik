@@ -169,21 +169,15 @@
   </div>
 
   <form id="hours-form" class="hours-form">
-    <!-- Standardní pracovní hodiny -->
-    <div class="form-group">
-      <label for="day-hours">Odpracované hodiny:</label>
-      <input type="number" step="0.5" min="0" id="day-hours" value="7.5">
-    </div>
-
-    <!-- Přesčas + Typ směny vedle sebe -->
+    <!-- Normální hodiny + Směna -->
     <div class="form-grid">
       <div class="form-group">
-        <label for="day-overtime">Přesčas:</label>
-        <input type="number" step="0.5" min="0" id="day-overtime" value="0">
+        <label for="day-hours">Normální hodiny:</label>
+        <input type="number" step="0.5" min="0" id="day-hours" value="7.5">
       </div>
       <div class="form-group">
-        <label for="day-shift">Typ směny:</label>
-        <select id="day-shift">
+        <label for="day-shift-hours">Směna:</label>
+        <select id="day-shift-hours">
           <option value="ranni">Ranní</option>
           <option value="odpoledni">Odpolední</option>
           <option value="nocni">Noční</option>
@@ -191,6 +185,22 @@
           <option value="dovolena">Dovolená</option>
           <option value="nemoc">Nemoc</option>
           <option value="nahr">Náhradní volno</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Přesčas + Směna -->
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="day-overtime">Přesčas:</label>
+        <input type="number" step="0.5" min="0" id="day-overtime" value="0">
+      </div>
+      <div class="form-group">
+        <label for="day-shift-overtime">Směna:</label>
+        <select id="day-shift-overtime">
+          <option value="ranni">Ranní</option>
+          <option value="odpoledni">Odpolední</option>
+          <option value="nocni">Noční</option>
         </select>
       </div>
     </div>
