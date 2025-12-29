@@ -263,10 +263,8 @@ function showDayInfoPanel(dateKey) {
     // pokud existuje měsíční souhrn, skryj ho při zobrazení detailu dne (rychlejší než odstraňovat)
     const existingSummary = document.getElementById('info-summary');
     if (existingSummary) existingSummary.style.display = 'none';
-    // ujistíme se, že řádky 'Směna' a 'Poznámka' jsou viditelné pro detail dne
-    const shiftRow = document.getElementById('info-shift') ? document.getElementById('info-shift').parentElement : null;
+    // ujistíme se, že řádek 'Poznámka' je viditelný pro detail dne
     const noteRow = document.getElementById('info-note') ? document.getElementById('info-note').parentElement : null;
-    if (shiftRow) shiftRow.style.display = '';
     if (noteRow) noteRow.style.display = '';
     // skryjeme řádek s celkovými hodinami při zobrazení detailu dne
     const totalRow = document.getElementById('info-total') ? document.getElementById('info-total').parentElement : null;
@@ -307,26 +305,6 @@ function showDayInfoPanel(dateKey) {
     }
     document.getElementById('overtime-shift-info').textContent = overtimeShiftDisplay ? `— ${overtimeShiftDisplay.toLowerCase()}` : '';
     
-    // Zobrazit směnu podle rotačního plánu pro daný den (ignorovat případné uložené přepsání)
-    // prefer DB-stored shift when present, otherwise show rotation-derived shift
-    let displayedShift = '';
-    try {
-      const dateObjShift = new Date(dateKey);
-      const smenaArr = getShiftArray();
-      const shiftDayStart = daysBetween(new Date(dateObjShift.getFullYear(), dateObjShift.getMonth(), 1));
-      const shiftDayIndex = (shiftDayStart + dateObjShift.getDate() - 1) % 28;
-      const shiftTextFromRotation = shifts[smenaArr[shiftDayIndex]] || '';
-      if (data.fromDB && data.shift) {
-        displayedShift = formatShiftLabel(data.shift);
-      } else {
-        // prefer rotation-derived label but fall back to stored value
-        displayedShift = formatShiftLabel(shiftTextFromRotation || data.shift);
-      }
-    } catch (e) {
-      displayedShift = formatShiftLabel(data.shift);
-    }
-    document.getElementById('info-shift').textContent = displayedShift;
-
     // header: formatted date + shift
     const dateObjHeader = new Date(dateKey);
     // use rotation-derived shift in header as well
