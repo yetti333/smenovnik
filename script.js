@@ -269,6 +269,8 @@ function showDayInfoPanel(dateKey) {
     // skryjeme řádek s celkovými hodinami při zobrazení detailu dne
     const totalRow = document.getElementById('info-total') ? document.getElementById('info-total').parentElement : null;
     if (totalRow) totalRow.style.display = 'none';
+    const totalMinutesRow = document.getElementById('info-total-minutes') ? document.getElementById('info-total-minutes').parentElement : null;
+    if (totalMinutesRow) totalMinutesRow.style.display = 'none';
     document.getElementById('info-hours').textContent = data.hours;
     document.getElementById('info-overtime').textContent = data.overtime;
     
@@ -370,6 +372,8 @@ async function showMonthSummary(year, month) {
   if (holidayEl) holidayEl.textContent = '';
   const totalEl = document.getElementById('info-total');
   if (totalEl) totalEl.textContent = '—';
+  const totalMinutesEl = document.getElementById('info-total-minutes');
+  if (totalMinutesEl) totalMinutesEl.textContent = '—';
   
   // Skrýt info o směnách pro normální hodiny a přesčasy (viditelné jen při detailu dne)
   const hoursShiftInfoEl = document.getElementById('hours-shift-info');
@@ -439,6 +443,11 @@ async function showMonthSummary(year, month) {
   if (totalEl) {
     totalEl.textContent = formatHours(totalAll);
     if (totalEl.parentElement) totalEl.parentElement.style.display = '';
+  }
+  if (totalMinutesEl) {
+    const minutesVal = Math.round(totalAll * 60);
+    totalMinutesEl.textContent = String(minutesVal);
+    if (totalMinutesEl.parentElement) totalMinutesEl.parentElement.style.display = '';
   }
   if (hoursEl) hoursEl.textContent = formatHours(totalNormal);
   if (overtimeEl) overtimeEl.textContent = formatHours(totalOvertime);
