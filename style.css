@@ -617,18 +617,9 @@ body.edit-open .action-bar {
   font-size: 1.1rem;  
 }
 
-/* Holiday marker (S) - hidden by default, shown in hours view */
+/* Holiday marker (S) - always hidden */
 .day-holiday-marker {
-  display: none;
-}
-.show-hours .day-holiday-marker {
-  display: block;
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  color: #d32f2f; /* red */
+  display: none !important;
 }
 
 /* Vacation marker (D) - controlled via data attribute */
@@ -639,7 +630,7 @@ body.edit-open .action-bar {
   display: block;
   position: absolute;
   top: 4px;
-  right: 18px; /* offset from S */
+  right: 4px; /* left corner position */
   font-size: 0.7rem;
   font-weight: bold;
   color: #2196f3; /* blue */
@@ -668,6 +659,11 @@ body.edit-open .action-bar {
 .day-hours {
   color: #2a2a2a !important; /* nebo jakákoliv tvoje barva */
   font-weight: normal !important;
+}
+
+/* Červené odpracované hodiny ve svátcích */
+.show-hours .svatek .day-hours {
+  color: red !important;
 }
 
 .hours-form {

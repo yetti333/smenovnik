@@ -780,7 +780,6 @@ async function renderCalendar(year, month) {
       <div class="day ${classes.trim()}" title="${tooltip}">
         <span class="day-number">${day}</span>
         <span class="day-hours" data-date="${dateKey}"></span>
-        ${isHolidayDay ? '<span class="day-holiday-marker">S</span>' : ''}
         <span class="day-vacation-marker">D</span>
       </div>
     `;
