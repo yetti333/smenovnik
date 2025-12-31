@@ -823,34 +823,32 @@ textarea {
 .pdf-preview-header {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: white;
-  padding: 1rem;
+  padding: 0.75rem;
   text-align: center;
-  margin-bottom: 1rem;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .pdf-preview-header h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
 }
 
 .pdf-preview-content {
   padding: 1rem;
   overflow-y: auto;
-  max-height: calc(100vh - 200px);
+  flex: 1;
   background: var(--bg);
 }
 
 .pdf-preview-footer {
-  position: fixed;
-  bottom: 60px;
-  left: 0;
-  right: 0;
-  padding: 1rem;
+  padding: 0.75rem;
   background: var(--bg);
   border-top: 1px solid var(--border);
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .pdf-preview-footer button {

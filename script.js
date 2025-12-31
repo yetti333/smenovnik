@@ -641,7 +641,7 @@ async function exportMonthToPDF(year, month) {
       body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
       h1 { text-align: center; margin: 5px 0 10px 0; font-size: 18px; line-height: 1; }
       table { width: 100%; border-collapse: collapse; font-size: 12px; }
-      th, td { border: 1px solid #333; padding: 3px 5px; text-align: left; }
+      th, td { border: 2px solid #333; padding: 3px 5px; text-align: left; }
       th { background-color: #2196f3; color: white; font-weight: bold; }
       tr:nth-child(even) { background-color: #f5f5f5; }
       table { page-break-inside: avoid; }
