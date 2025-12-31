@@ -217,11 +217,33 @@
     <button type="submit" id="btn-ok">OK</button>
   </div>
 </div>
+
+  <!-- ✅ SCREEN: PDF Náhled -->
+  <div id="pdf-preview-screen" class="screen">
+    <header class="pdf-preview-header">
+      <h2>Náhled PDF</h2>
+    </header>
+    
+    <div id="pdf-preview-content" class="pdf-preview-content">
+      <!-- Obsah se vygeneruje JS -->
+    </div>
+    
+    <div class="pdf-preview-footer">
+      <button type="button" id="btn-pdf-back">⬅️ Zpět</button>
+      <button type="button" id="btn-pdf-save">💾 Uložit PDF</button>
+    </div>
+  </div>
+
+  <!-- Skrytý element pro export PDF (bez CSS omezení na výšku) -->
+  <div id="pdf-export-container" style="display: none; position: absolute; left: -9999px; width: 100%; overflow: visible;">
+    <div id="pdf-export-content"></div>
+  </div>
   </div> <!-- ✅ konec wrapperu -->
 
   <!-- ✅ Akční lišta dole -->
 <div class="action-bar">
   <button id="btn-settings">⚙️</button>
+  <button id="btn-export-pdf">📄</button>
   <button id="btn-hours">🕒</button>
   <button id="btn-edit">✏️</button>
   <button id="btn-today">📅</button>
@@ -229,6 +251,7 @@
   <button id="btn-next">➡️</button>
 </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

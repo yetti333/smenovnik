@@ -818,3 +818,82 @@ textarea {
   justify-content: flex-end;
   gap: 0.5rem;
 }
+
+/* === PDF Preview Screen === */
+.pdf-preview-header {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.pdf-preview-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.pdf-preview-content {
+  padding: 1rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+  background: var(--bg);
+}
+
+.pdf-preview-footer {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.pdf-preview-footer button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+#btn-pdf-back {
+  background-color: #f44336;
+  color: white;
+  flex: 1;
+}
+
+#btn-pdf-back:active {
+  transform: scale(0.98);
+}
+
+#btn-pdf-save {
+  background-color: #4CAF50;
+  color: white;
+  flex: 1;
+}
+
+#btn-pdf-save:active {
+  transform: scale(0.98);
+}
+
+/* PDF Preview Screen Full-Screen Modal */
+#pdf-preview-screen.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  background: var(--bg);
+}

@@ -105,6 +105,12 @@ function showScreen(screen) {
   calendarScreen.classList.remove('active');
   settingsScreen.classList.remove('active');
   editScreen.classList.remove('active');
+  
+  // PDF preview screen
+  const pdfPreviewScreen = document.getElementById('pdf-preview-screen');
+  if (pdfPreviewScreen) {
+    pdfPreviewScreen.classList.remove('active');
+  }
 
   // zobrazit vybranou obrazovku
   screen.classList.add('active');
@@ -179,6 +185,13 @@ function showScreen(screen) {
 document.getElementById('btn-settings').addEventListener('click', () => {
   showScreen(settingsScreen);
   document.body.classList.add("settings-open");
+  if (navigator.vibrate) navigator.vibrate(vibr);
+});
+
+// tlačítko 📄 Export PDF
+document.getElementById('btn-export-pdf').addEventListener('click', () => {
+  exportMonthToPDF(currentYear, currentMonth);
+  //console.log('Export do PDF zatím není dostupný.');
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
@@ -462,6 +475,188 @@ function formatHours(n) {
   if (!isFinite(n)) return '0';
   if (Math.abs(Math.round(n) - n) < 1e-9) return String(Math.round(n));
   return String(Number(n.toFixed(2)));
+}
+
+// ================================
+// Export měsíce do PDF
+// ================================
+async function exportMonthToPDF(year, month) {
+  const monthStart = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const monthName = monthStart.toLocaleString('cs-CZ', { month: 'long' });
+  const monthNameCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+  // Načti data z DB
+  const db = await openDB();
+  const tx = db.transaction('days', 'readonly');
+  const store = tx.objectStore('days');
+
+  const dataMap = new Map();
+  await new Promise((resolve) => {
+    const req = store.getAll();
+    req.onsuccess = () => {
+      req.result.forEach(data => {
+        if (data.date) {
+          dataMap.set(data.date, data);
+        }
+      });
+      resolve();
+    };
+  });
+
+  // Vypočítej celkové hodiny a minuty
+  let totalHours = 0;
+  for (let day = 1; day <= lastDay; day++) {
+    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateObj = new Date(dateKey);
+    
+    let data = dataMap.get(dateKey);
+    if (!data) {
+      const weekday = dateObj.getDay();
+      const sm = getShiftArray();
+      const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+      const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+      
+      if (sm[shiftDayIndex] !== 0) {
+        const hours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+        const overtime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
+        totalHours += hours + overtime;
+      }
+    } else {
+      totalHours += parseFloat(data.hours || 0) + parseFloat(data.overtime || 0);
+    }
+  }
+  const totalMinutes = Math.round(totalHours * 60);
+
+  // Vytvoř HTML tabulku
+  const monthNameFull = `${monthNameCap} ${year}`;
+  let html = `
+    <style>
+      body { font-family: Arial, sans-serif; padding: 10px; }
+      h1 { text-align: center; margin-bottom: 20px; font-size: 24px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+      th { background-color: #ddd; color: #000; font-weight: bold; }
+      tr:nth-child(even) { background-color: #ddd; }
+      .summary-table { margin-bottom: 15px; }
+      .summary-table td { font-weight: bold; background-color: #ddd; border: 2px solid #333; }
+    </style>
+    <table class="summary-table">
+      <tr>
+        <td style="width: 33%;">${monthNameFull}</td>
+        <td style="width: 33%;">Celkem hodiny: ${formatHours(totalHours)}</td>
+        <td style="width: 34%;">Celkem minuty: ${totalMinutes}</td>
+      </tr>
+    </table>
+    <table>
+      <colgroup>
+        <col style="width: 15%;">
+        <col style="width: 15%;">
+        <col style="width: 12%;">
+        <col style="width: 12%;">
+        <col style="width: 46%;">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Den</th>
+          <th>Směna</th>
+          <th>Hodiny</th>
+          <th>Přesčasy</th>
+          <th>Poznámka</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  for (let day = 1; day <= lastDay; day++) {
+    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateObj = new Date(dateKey);
+    const dayName = days[dateObj.getDay()];
+    
+    let data = dataMap.get(dateKey);
+    let shiftText = '';
+    
+    if (!data) {
+      // Vypočítej defaultní hodnoty
+      const weekday = dateObj.getDay();
+      const sm = getShiftArray();
+      const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+      const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+      
+      let hours = '0';
+      let overtime = '0';
+      if (sm[shiftDayIndex] !== 0) {
+        hours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
+        overtime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
+      }
+      data = { hours, overtime, note: '' };
+      
+      // Направenie z rotace
+      shiftText = shifts[sm[shiftDayIndex]] || '';
+    } else {
+      // Shift z DB
+      shiftText = formatShiftLabel(data.shift) || '';
+    }
+
+    const hours = formatHours(parseFloat(data.hours || 0));
+    const overtime = formatHours(parseFloat(data.overtime || 0));
+    const note = (data.note || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    html += `
+      <tr>
+        <td>${dayName} ${day}.${month + 1}.</td>
+        <td>${shiftText}</td>
+        <td>${hours}</td>
+        <td>${overtime}</td>
+        <td>${note}</td>
+      </tr>
+    `;
+  }
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  // Zobraz náhled na fullscreen v aplikaci
+  const pdfPreviewScreen = document.getElementById('pdf-preview-screen');
+  const pdfPreviewContent = document.getElementById('pdf-preview-content');
+  const pdfExportContent = document.getElementById('pdf-export-content');
+  
+  // Vytvoř obsah s tlačítky
+  pdfPreviewContent.innerHTML = `
+    <style>
+      h1 { text-align: center; margin-bottom: 20px; font-size: 24px; color: var(--text); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { border: 1px solid var(--border-strong); padding: 8px; text-align: left; color: var(--text); }
+      th { background-color: var(--accent); color: white; font-weight: bold; }
+      tr:nth-child(even) { background-color: var(--form-bg); }
+    </style>
+    ${html}
+  `;
+  
+  // Ulož stejný obsah do skrytého exportního kontejneru (bez CSS omezení)
+  pdfExportContent.innerHTML = `
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+      h1 { text-align: center; margin: 5px 0 10px 0; font-size: 18px; line-height: 1; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      th, td { border: 1px solid #333; padding: 3px 5px; text-align: left; }
+      th { background-color: #2196f3; color: white; font-weight: bold; }
+      tr:nth-child(even) { background-color: #f5f5f5; }
+      table { page-break-inside: avoid; }
+    </style>
+    ${html}
+  `;
+  
+  // Ulož měsíc a rok pro pozdější export
+  window._pdfExportMonth = month;
+  window._pdfExportYear = year;
+  window._pdfExportMonthName = monthNameFull;
+  
+  // Zobraz screen
+  showScreen(pdfPreviewScreen);
+  if (navigator.vibrate) navigator.vibrate(vibr);
 }
 
 // Otevření IndexedDB
@@ -1214,6 +1409,48 @@ if (btnReset) {
     renderCalendar(currentYear, currentMonth);
     try { showMonthSummary(currentYear, currentMonth); } catch(e){}
     alert('Data byla smazána.');
+  });
+}
+
+// =============================
+//      OBSLUHA TLAČÍTEK PDF NÁHLEDU
+// =============================
+const btnPdfSave = document.getElementById('btn-pdf-save');
+const btnPdfBack = document.getElementById('btn-pdf-back');
+const pdfPreviewScreen = document.getElementById('pdf-preview-screen');
+
+if (btnPdfSave) {
+  btnPdfSave.addEventListener('click', async () => {
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    
+    const element = document.getElementById('pdf-export-content');
+    const monthNameFull = window._pdfExportMonthName || 'Export';
+    
+    const opt = {
+      margin: 10,
+      filename: `${monthNameFull}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+    };
+    
+    try {
+      await html2pdf().set(opt).from(element).save();
+      // Po úspěšném exportu se vrátíme na kalendář
+      showScreen(calendarScreen);
+      document.body.classList.remove("pdf-preview-open");
+    } catch (err) {
+      console.error('Chyba při exportu PDF:', err);
+      alert('Chyba při exportu PDF');
+    }
+  });
+}
+
+if (btnPdfBack) {
+  btnPdfBack.addEventListener('click', () => {
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    showScreen(calendarScreen);
+    document.body.classList.remove("pdf-preview-open");
   });
 }
 
