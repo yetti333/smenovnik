@@ -18,6 +18,7 @@ const smenaA = [0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0]; //28x,
 const smenaB = [1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1];
 const smenaC = [3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3];
 const smenaD = [0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2];
+const smenaR = [0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1]; // rotační volno každý 7.den
 const days = ["Neděle","Pondělí","Úterý","Středa","Čtvrtek","Pátek","Sobota"];
 const shifts = ["Volno", "Ranní", "Odpolední", "Noční"];
 
@@ -876,6 +877,7 @@ function getShiftArray() {
     case "B": return smenaB;
     case "C": return smenaC;
     case "D": return smenaD;
+    case "R": return smenaR;
   }
 }
 
