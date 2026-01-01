@@ -736,11 +736,13 @@ body.edit-open .action-bar {
 
 /* === Verze aplikace === */
 #app-version {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #999;
   position: absolute;
-  bottom: 0.5rem;
   right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: default;
 }
 
 body[data-theme="dark"] #app-version {
