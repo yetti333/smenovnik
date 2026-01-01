@@ -6,5 +6,5 @@ const urlsToCache = [
   "/style.css",
   "/manifest.json",
   "/icon-192.png",
-  "/icon-512.png"
-];
+  "/icon-512.png",
+  "/js/html2pdf.bundle.min.js"

@@ -1,4 +1,4 @@
-const CACHE_NAME = "calendar";
+const CACHE_NAME = "calendar-v1.25";
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
@@ -6,7 +6,8 @@ const FILES_TO_CACHE = [
   "/script.js",
   "/manifest.json",
   "/icon-192.png",
-  "/icon-512.png"
+  "/icon-512.png",
+  "/js/html2pdf.bundle.min.js"
 ];
 
 // Instalace: uloží soubory do cache
