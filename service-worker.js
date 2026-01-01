@@ -22,20 +22,30 @@ self.addEventListener("install", event => {
   );
 });
 
-// Aktivace: smaže staré cache
+// Aktivace: smaže staré cache a notifikuje o nové verzi
 self.addEventListener("activate", event => {
   console.log("[SW] Activate event");
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
+    caches.keys().then(keys => {
+      const deleteOldCaches = Promise.all(
         keys.map(key => {
           if (key !== CACHE_NAME) {
             console.log("[SW] Deleting old cache:", key);
+            // Notifikuj všechny klienty o nové verzi
+            self.clients.matchAll().then(clients => {
+              clients.forEach(client => {
+                client.postMessage({
+                  type: 'NEW_VERSION_AVAILABLE',
+                  message: 'Dostupná je nová verze aplikace!'
+                });
+              });
+            });
             return caches.delete(key);
           }
         })
-      )
-    )
+      );
+      return deleteOldCaches;
+    })
   );
   self.clients.claim();
 });

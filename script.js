@@ -12,6 +12,62 @@ if ("serviceWorker" in navigator) {
         console.error("Chyba při registraci Service Workeru:", err);
       });
   });
+
+  // Posluchač pro notifikace o nové verzi
+  navigator.serviceWorker.addEventListener("message", event => {
+    if (event.data.type === "NEW_VERSION_AVAILABLE") {
+      console.log("Nová verze dostupná!");
+      
+      // Zobrazit notifikaci uživateli
+      const notification = document.createElement("div");
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ff8c00;
+        color: #000000;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        z-index: 11000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-weight: 600;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+      `;
+      
+      notification.innerHTML = `
+        <span>Dostupná je nová verze! Aktualizovat?</span>
+        <button id="update-btn" style="
+          background: #000000;
+          color: #ff8c00;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 600;
+        ">Ano</button>
+        <button id="dismiss-btn" style="
+          background: transparent;
+          color: #000000;
+          border: none;
+          cursor: pointer;
+          font-weight: 600;
+        ">Později</button>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      document.getElementById("update-btn").addEventListener("click", () => {
+        window.location.reload();
+      });
+      
+      document.getElementById("dismiss-btn").addEventListener("click", () => {
+        notification.remove();
+      });
+    }
+  });
 }
 
 const smenaA = [0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0]; //28x, 1-11-2025

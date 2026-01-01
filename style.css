@@ -731,6 +731,20 @@ body.edit-open .action-bar {
   gap: 1rem;
   background: #f8f9fa;
   border-top: 1px solid #e9ecef;
+  position: relative;
+}
+
+/* === Verze aplikace === */
+#app-version {
+  font-size: 0.75rem;
+  color: #999;
+  position: absolute;
+  bottom: 0.5rem;
+  right: 1rem;
+}
+
+body[data-theme="dark"] #app-version {
+  color: #666;
 }
 
 #btn-settings-ok, #btn-settings-cancel {
