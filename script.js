@@ -1270,6 +1270,9 @@ themeControl.addEventListener("click", (e) => {
 
   document.body.dataset.theme = savedTheme;
   activateSegment(themeControl, savedTheme);
+  
+  // Okamžitě překreslit kalendář s novým tématem
+  renderCalendar();
 });
 
 // ================================================
