@@ -486,6 +486,11 @@ body[data-theme="dark"] .info-header {
   color: #ff8c00; /* výrazná oranžová pro hlavičku */
 }
 
+/* === Tmavé téma - ohraničení buněk kalendáře === */
+body[data-theme="dark"] .calendar-grid div {
+  border: 2px solid #ff8c00;
+}
+
 /* === Tmavé téma - vybraný den === */
 body[data-theme="dark"] .calendar-grid div.selected {
   outline: 4px solid #ff0000;
@@ -951,6 +956,35 @@ body.edit-open .action-bar {
 .day-hours {
   color: #2a2a2a !important; /* nebo jakákoliv tvoje barva */
   font-weight: normal !important;
+}
+
+/* === Tmavé téma - tlačítko hodin === */
+body[data-theme="dark"] #btn-hours.active {
+  background: #ff8c00;
+  color: #000000;
+}
+
+/* === Tmavé téma - PDF preview (zůstane bílý jako tisk) === */
+body[data-theme="dark"] .pdf-preview-header {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+}
+
+body[data-theme="dark"] .pdf-preview-content {
+  background: #ffffff;
+  color: #000000;
+}
+
+body[data-theme="dark"] .pdf-preview-content h2,
+body[data-theme="dark"] .pdf-preview-content table,
+body[data-theme="dark"] .pdf-preview-content td,
+body[data-theme="dark"] .pdf-preview-content th {
+  color: #000000;
+}
+
+body[data-theme="dark"] .pdf-preview-footer {
+  background: #ffffff;
+  border-top-color: #e0e0e0;
 }
 
 /* Červené odpracované hodiny ve svátcích */
