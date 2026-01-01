@@ -1455,6 +1455,79 @@ if (btnPdfBack) {
 }
 
 // =============================
+//      INICIALIZACE PRVNÍ SPUŠTĚNÍ
+// =============================
+function initializeFirstRun() {
+  // Zkontroluj zda existují defaultní hodiny v localStorage
+  const isFirstRun = !localStorage.getItem('mon-hours');
+  
+  if (isFirstRun) {
+    // Defaultní pracovní doba - 7.5 hodin pro všední dny, 0 pro víkendy
+    const defaultHours = {
+      'sun-hours': '0',      // Neděle
+      'mon-hours': '7.5',    // Pondělí
+      'tue-hours': '7.5',    // Úterý
+      'wed-hours': '7.5',    // Středa
+      'thu-hours': '7.5',    // Čtvrtek
+      'fri-hours': '7.5',    // Pátek
+      'sat-hours': '0'       // Sobota
+    };
+    
+    const defaultOvertime = {
+      'sun-overtime': '0',
+      'mon-overtime': '0',
+      'tue-overtime': '0',
+      'wed-overtime': '0',
+      'thu-overtime': '0',
+      'fri-overtime': '0',
+      'sat-overtime': '0'
+    };
+    
+    // Ulož defaultní hodnoty
+    Object.entries(defaultHours).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+    
+    Object.entries(defaultOvertime).forEach(([key, value]) => {
+      localStorage.setItem(key, value);
+    });
+    
+    // Nastav defaultní shift na "D" (Smena D)
+    localStorage.setItem('shift', 'D');
+    
+    // Zobraz upozornění uživateli
+    console.log('%c🎉 První spuštění! Defaultní hodiny byly nastaveny.', 'background: #2196f3; color: white; padding: 8px; border-radius: 4px;');
+    console.log('Podrobnosti najdeš v ⚙️ Nastavení');
+    
+    // Volitelně: Zobraz malé upozornění v DOM
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 10px;
+      right: 10px;
+      background: #2196f3;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      z-index: 5000;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      animation: slideDown 0.3s ease-out;
+    `;
+    notification.textContent = '📋 První spuštění! Defaultní hodiny nastaveny. Jdi do ⚙️ pro úpravu.';
+    document.body.appendChild(notification);
+    
+    // Smaž notifikaci po 5 sekundách
+    setTimeout(() => {
+      notification.style.animation = 'slideUp 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }, 5000);
+  }
+}
+
+// =============================
 //      INICIALIZACE KALENDÁŘE
 // ============================
+initializeFirstRun();
 animateCalendarUpdate(() => renderCalendar(currentYear, currentMonth));
