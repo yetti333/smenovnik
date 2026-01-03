@@ -4,7 +4,7 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("./service-worker.js") // relativní cesta pro GitHub Pages
+      .register("./service-worker.js", { scope: './' }) // relativní cesta a scope pro GitHub Pages
       .then(reg => {
         console.log("Service Worker registrován:", reg.scope);
       })
