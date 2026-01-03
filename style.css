@@ -718,8 +718,7 @@ body.settings-open .action-bar {
 }
 /* === Skrytí lišty při editaci === */
 body.edit-open .action-bar {
-  opacity: 0;
-  pointer-events: none; /* aby nešlo klikat, když je skrytá */
+  display: none; /* zamezí kliknutí na tlačítka v editaci */
 }
 
 /* === Footer nastavení === */
