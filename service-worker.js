@@ -1,13 +1,13 @@
-const CACHE_NAME = "calendar-v1.34";
+const CACHE_NAME = "calendar-v1.35";
 const FILES_TO_CACHE = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/script.js",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/js/html2pdf.bundle.min.js"
+  "./",
+  "./index.html",
+  "./style.css",
+  "./script.js",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./js/html2pdf.bundle.min.js"
 ];
 
 // Instalace: uloží soubory do cache

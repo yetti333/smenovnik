@@ -4,7 +4,7 @@
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
-      .register("/service-worker.js") // cesta musí odpovídat umístění souboru
+      .register("./service-worker.js") // relativní cesta pro GitHub Pages
       .then(reg => {
         console.log("Service Worker registrován:", reg.scope);
       })
