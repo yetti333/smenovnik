@@ -3,12 +3,10 @@
 // ===============================
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    // Pro GitHub Pages musíme použít absolutní cestu s názvem repo
-    const baseUrl = window.location.pathname.replace(/\/+$/, '').split('/').slice(0, 2).join('/') || '/';
-    const swPath = `${baseUrl}/service-worker.js`;
+    console.log("Registrace SW, pathname:", window.location.pathname);
     
     navigator.serviceWorker
-      .register(swPath, { scope: baseUrl + '/' })
+      .register("service-worker.js", { scope: "/smenovnik/" })
       .then(reg => {
         console.log("Service Worker registrován:", reg.scope);
       })
