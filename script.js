@@ -3,12 +3,8 @@
 // ===============================
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    // Detekce base path pro GitHub Pages
-    const basePath = window.location.pathname.split('/')[1]; // např. 'smenovnik' nebo ''
-    const swPath = basePath ? `/${basePath}/service-worker.js` : '/service-worker.js';
-    
     navigator.serviceWorker
-      .register(swPath)
+      .register("service-worker.js") // relativní bez lomítka pro GitHub Pages
       .then(reg => {
         console.log("Service Worker registrován:", reg.scope);
       })
