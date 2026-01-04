@@ -52,7 +52,7 @@
     <div id="settings-screen" class="screen">
 
   <header class="settings-header">
-    <h2>Nastavení <span id="app-version">v1.41</span></h2>
+    <h2>Nastavení <span id="app-version">v1.42</span></h2>
   </header>
 
   <!-- záhlaví jako segment control -->
@@ -92,6 +92,12 @@
         <h3>Data</h3>
         <button id="btn-reset-data">Resetovat data</button>
         <p class="muted">Vymaže všechna uložená data (IndexedDB + vybrané položky localStorage).</p>
+      </section>
+
+      <!-- Nápověda -->
+      <section class="settings-section">
+        <h3>Nápověda</h3>
+        <button id="btn-show-manual">📖 Zobrazit návod k použití</button>
       </section>
     </div>
 
@@ -232,6 +238,21 @@
     <div class="pdf-preview-footer">
       <button type="button" id="btn-pdf-back">⬅️ Zpět</button>
       <button type="button" id="btn-pdf-save">💾 Uložit PDF</button>
+    </div>
+  </div>
+
+  <!-- ✅ SCREEN: Manuál -->
+  <div id="manual-screen" class="screen">
+    <header class="manual-header">
+      <h2>📖 Návod k použití</h2>
+    </header>
+    
+    <div id="manual-content" class="manual-content">
+      <!-- Obsah se načte JS -->
+    </div>
+    
+    <div class="manual-footer">
+      <button type="button" id="btn-manual-back">⬅️ Zpět</button>
     </div>
   </div>
 

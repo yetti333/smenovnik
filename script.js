@@ -171,6 +171,12 @@ function showScreen(screen) {
     pdfPreviewScreen.classList.remove('active');
   }
 
+  // Manual screen
+  const manualScreen = document.getElementById('manual-screen');
+  if (manualScreen) {
+    manualScreen.classList.remove('active');
+  }
+
   // zobrazit vybranou obrazovku
   screen.classList.add('active');
 
@@ -1472,6 +1478,106 @@ if (btnReset) {
     renderCalendar(currentYear, currentMonth);
     try { showMonthSummary(currentYear, currentMonth); } catch(e){}
     alert('Data byla smazána.');
+  });
+}
+
+// =============================
+//      ZOBRAZENÍ MANUÁLU
+// =============================
+const btnShowManual = document.getElementById('btn-show-manual');
+const manualScreen = document.getElementById('manual-screen');
+const btnManualBack = document.getElementById('btn-manual-back');
+
+if (btnShowManual) {
+  btnShowManual.addEventListener('click', async () => {
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    
+    // Načíst MANUAL.md a převést na HTML
+    try {
+      const response = await fetch('MANUAL.md');
+      const markdown = await response.text();
+      
+      // Rozdělit na řádky
+      const lines = markdown.split('\n');
+      let html = '';
+      let inList = false;
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // Prázdný řádek
+        if (line.trim() === '') {
+          if (inList) {
+            html += '</ul>';
+            inList = false;
+          }
+          continue;
+        }
+        
+        // Nadpisy
+        if (line.startsWith('### ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h3>' + line.substring(4) + '</h3>';
+        } else if (line.startsWith('## ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h2>' + line.substring(3) + '</h2>';
+        } else if (line.startsWith('# ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += '<h1>' + line.substring(2) + '</h1>';
+        }
+        // Odrážkový seznam
+        else if (line.match(/^[\-\*] /)) {
+          if (!inList) {
+            html += '<ul>';
+            inList = true;
+          }
+          let content = line.substring(2)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+          html += '<li>' + content + '</li>';
+        }
+        // Číslovaný seznam
+        else if (line.match(/^\d+\. /)) {
+          if (!inList) {
+            html += '<ol>';
+            inList = true;
+          }
+          let content = line.replace(/^\d+\. /, '')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+          html += '<li>' + content + '</li>';
+        }
+        // Normální odstavec
+        else {
+          if (inList) { html += '</ul>'; inList = false; }
+          let content = line
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+          html += '<p>' + content + '</p>';
+        }
+      }
+      
+      if (inList) html += '</ul>';
+      
+      document.getElementById('manual-content').innerHTML = html;
+      showScreen(manualScreen);
+    } catch (e) {
+      console.error('Chyba při načítání manuálu:', e);
+      document.getElementById('manual-content').innerHTML = 
+        '<h1>📖 Návod k použití</h1><p>Manuál se nepodařilo načíst. Zkuste to prosím později.</p>';
+      showScreen(manualScreen);
+    }
+  });
+}
+
+if (btnManualBack) {
+  btnManualBack.addEventListener('click', () => {
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    showScreen(settingsScreen);
+    document.body.classList.add("settings-open");
   });
 }
 
