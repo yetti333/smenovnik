@@ -618,6 +618,10 @@ body[data-theme="dark"] .settings-section h2 {
   color: #ff8c00;
 }
 
+body[data-theme="dark"] .settings-section h3 {
+  color: #ff8c00;
+}
+
 /* === Tmavé téma - edit screen === */
 body[data-theme="dark"] .edit-header {
   background: #ffcc99;
