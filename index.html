@@ -52,7 +52,7 @@
     <div id="settings-screen" class="screen">
 
   <header class="settings-header">
-    <h2>Nastavení <span id="app-version">v1.44</span></h2>
+    <h2>Nastavení <span id="app-version">v1.45</span></h2>
   </header>
 
   <!-- záhlaví jako segment control -->
@@ -93,8 +93,8 @@
         <button id="btn-backup-manual">💾 Vytvořit zálohu nyní</button>
         <p class="muted small">Vytvoří zálohu a nabídne ji ke stažení.</p>
         <button id="btn-import-backup">📤 Importovat zálohu ze souboru</button>
-        <p class="muted small">Nahraje dříve staženou zálohu z počítače/telefonu.</p>
-        <input type="file" id="backup-file-input" accept=".json" style="display: none;">
+        <p class="muted small">Nahraje dříve staženou zálohu z počítače/telefonu. Můžeš vybrat víc souborů najednou.</p>
+        <input type="file" id="backup-file-input" accept=".json" multiple style="display: none;">
         <button id="btn-restore-backup">📥 Obnovit z dostupných záloh</button>
         <p class="muted small">Obnoví data z dostupných záloh v zařízení.</p>
         <p id="last-backup-info" class="backup-info"></p>

@@ -1809,7 +1809,10 @@ async function createBackupForMonth(year, month) {
  */
 async function saveBackupToStorage(year, month) {
   const backup = await createBackupForMonth(year, month);
-  const backupKey = `backup-${year}-${String(month + 1).padStart(2, '0')}`;
+  const timestamp = new Date(backup.date);
+  const dateStr = `${timestamp.getFullYear()}-${String(timestamp.getMonth() + 1).padStart(2, '0')}-${String(timestamp.getDate()).padStart(2, '0')}`;
+  const timeStr = `${String(timestamp.getHours()).padStart(2, '0')}-${String(timestamp.getMinutes()).padStart(2, '0')}`;
+  const backupKey = `backup_${dateStr}_${timeStr}`;
   localStorage.setItem(backupKey, JSON.stringify(backup));
   updateBackupInfo();
   return backupKey;
@@ -1822,15 +1825,26 @@ function getAvailableBackups() {
   const backups = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key.startsWith('backup-')) {
-      const data = JSON.parse(localStorage.getItem(key));
-      backups.push({
-        key,
-        year: data.year,
-        month: data.month,
-        date: new Date(data.date),
-        label: `${String(data.month + 1).padStart(2, '0')}/${data.year}`
-      });
+    if (key.startsWith('backup_')) {
+      try {
+        const data = JSON.parse(localStorage.getItem(key));
+        backups.push({
+          key,
+          year: data.year,
+          month: data.month,
+          date: new Date(data.date),
+          label: `${String(data.month + 1).padStart(2, '0')}/${data.year}`,
+          displayDate: new Date(data.date).toLocaleDateString('cs-CZ', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+        });
+      } catch (e) {
+        console.error('Chyba při parsování zálohy:', key, e);
+      }
     }
   }
   // Seřaď od nejnovější
@@ -1886,12 +1900,11 @@ async function showRestoreBackupDialog() {
   dialog.className = 'backup-dialog-overlay';
   dialog.innerHTML = `
     <div class="backup-dialog">
-      <h3>Dostupné zálohování</h3>
+      <h3>Dostupné zálohování (${backups.length})</h3>
       <div class="backup-list">
         ${backups.map((b, i) => `
           <div class="backup-item" data-key="${b.key}">
-            <strong>${b.label}</strong>
-            <small>${new Date(b.date).toLocaleDateString('cs-CZ', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>
+            <strong>${b.label} - ${b.displayDate}</strong>
           </div>
         `).join('')}
       </div>
@@ -1923,11 +1936,24 @@ async function showRestoreBackupDialog() {
 
   document.getElementById('backup-confirm').addEventListener('click', async () => {
     if (selectedBackupKey) {
+      // Zjisti rok a měsíc ze zálohy
+      const backupJSON = localStorage.getItem(selectedBackupKey);
+      const backup = JSON.parse(backupJSON);
+      
       const success = await restoreFromBackup(selectedBackupKey);
       dialog.remove();
       
       if (success) {
         showNotification('✅ Zálohování bylo obnoveno', 'success');
+        
+        // Přeskoč na měsíc obnovené zálohy
+        currentYear = backup.year;
+        currentMonth = backup.month;
+        localStorage.setItem('selectedDate', `${backup.year}-${String(backup.month + 1).padStart(2, '0')}-01`);
+        
+        // Zavři nastavení a zobraz kalendář
+        showScreen(calendarScreen);
+        document.body.classList.remove("settings-open");
         renderCalendar(currentYear, currentMonth);
       } else {
         showNotification('❌ Chyba při obnovování zálohy', 'error');
@@ -2010,7 +2036,7 @@ function downloadBackup(backupKey) {
   const timestamp = new Date(backup.date);
   const dateStr = `${timestamp.getFullYear()}-${String(timestamp.getMonth() + 1).padStart(2, '0')}-${String(timestamp.getDate()).padStart(2, '0')}`;
   const timeStr = `${String(timestamp.getHours()).padStart(2, '0')}-${String(timestamp.getMinutes()).padStart(2, '0')}`;
-  const fileName = `backup-${backup.year}-${String(backup.month + 1).padStart(2, '0')}_${dateStr}_${timeStr}.json`;
+  const fileName = `smena_backup_${dateStr}_${timeStr}.json`;
   
   // Vytvoř blob a stáhni
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -2039,23 +2065,33 @@ function openImportBackupDialog() {
  */
 async function importBackupFromFile(file) {
   try {
+    // Validuj název souboru - musí být smena_backup_YYYY-MM-DD_HH-MM.json
+    const validNamePattern = /^smena_backup_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.json$/;
+    if (!validNamePattern.test(file.name)) {
+      throw new Error('InvalidFileName');
+    }
+
     const text = await file.text();
     const backup = JSON.parse(text);
 
     // Validuj strukturu zálohy
     if (!backup.year || backup.month === undefined || !backup.days) {
-      throw new Error('Neplatný formát zálohy');
+      throw new Error('InvalidFormat');
     }
 
-    // Ulož do localStorage
-    const backupKey = `backup-${backup.year}-${String(backup.month + 1).padStart(2, '0')}`;
+    // Vytvoř unikátní klíč s timestamp
+    const backupDate = new Date(backup.date);
+    const dateStr = `${backupDate.getFullYear()}-${String(backupDate.getMonth() + 1).padStart(2, '0')}-${String(backupDate.getDate()).padStart(2, '0')}`;
+    const timeStr = `${String(backupDate.getHours()).padStart(2, '0')}-${String(backupDate.getMinutes()).padStart(2, '0')}`;
+    const backupKey = `backup_${dateStr}_${timeStr}`;
+    
     localStorage.setItem(backupKey, JSON.stringify(backup));
     
     updateBackupInfo();
-    showNotification(`✅ Zálohování importováno: ${backupKey.replace('backup-', '').replace('-', '/')}`, 'success');
+    return true;
   } catch (error) {
-    console.error('Chyba při importu zálohy:', error);
-    showNotification('❌ Chyba při importu - neplatný soubor', 'error');
+    // Pouze v dev módu: console.debug('Chyba importu:', error);
+    return false;
   }
 }
 
@@ -2074,9 +2110,28 @@ if (btnImportBackup) {
 // Obsluha file inputu pro import
 const backupFileInput = document.getElementById('backup-file-input');
 if (backupFileInput) {
-  backupFileInput.addEventListener('change', (e) => {
-    if (e.target.files && e.target.files[0]) {
-      importBackupFromFile(e.target.files[0]);
+  backupFileInput.addEventListener('change', async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      let successCount = 0;
+      let errorCount = 0;
+      
+      // Zpracuj všechny vybrané soubory
+      for (let file of e.target.files) {
+        const success = await importBackupFromFile(file);
+        if (success) {
+          successCount++;
+        } else {
+          errorCount++;
+        }
+      }
+      
+      // Zobraz shrnutí
+      if (successCount > 0) {
+        showNotification(`✅ Importováno ${successCount} záloh${successCount === 1 ? 'ování' : ''}${errorCount > 0 ? `, ${errorCount} chyb` : ''}`, 'success');
+      } else if (errorCount > 0) {
+        showNotification(`❌ Všechny soubory se nepodařilo importovat`, 'error');
+      }
+      
       e.target.value = ''; // Reset input
     }
   });
