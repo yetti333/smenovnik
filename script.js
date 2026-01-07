@@ -1696,6 +1696,413 @@ function initializeFirstRun() {
 }
 
 // =============================
+//      ZÁLOHOVÁNÍ A OBNOVA
+// =============================
+
+/**
+ * Zobrazí notifikaci uživateli
+ */
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    z-index: 10000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  `;
+  notification.textContent = message;
+  document.body.appendChild(notification);
+
+  // Zobraz notifikaci
+  setTimeout(() => {
+    notification.style.opacity = '1';
+  }, 10);
+
+  // Smaž notifikaci po 3 sekundách
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+/**
+ * Vytvoří zálohu pro daný měsíc
+ * @param {number} year - Rok
+ * @param {number} month - Měsíc (0-11)
+ * @returns {Promise<Object>} Záloha s daty všech dní měsíce
+ */
+async function createBackupForMonth(year, month) {
+  const db = await openDB();
+  const tx = db.transaction('days', 'readonly');
+  const store = tx.objectStore('days');
+  
+  // Počet dní v měsíci
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const backupData = {
+    year,
+    month,
+    date: new Date().toISOString(),
+    days: {}
+  };
+
+  // Projdi všechny dny měsíce
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateObj = new Date(year, month, day);
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const weekday = dateObj.getDay();
+
+    // Pokus se načíst z DB
+    const request = store.get(dateStr);
+    
+    await new Promise((resolve) => {
+      request.onsuccess = () => {
+        const data = request.result;
+        if (data) {
+          backupData.days[dateStr] = {
+            hours: data.hours,
+            hoursShift: data.hoursShift,
+            overtime: data.overtime,
+            overtimeShift: data.overtimeShift,
+            note: data.note
+          };
+        } else {
+          // Použij default hodnoty
+          const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
+          const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
+          
+          // Shift z rotace
+          const sm = getShiftArray();
+          const shiftDayStart = daysBetween(new Date(year, month, 1));
+          const shiftDayIndex = (shiftDayStart + day - 1) % 28;
+          const defaultShiftValue = sm[shiftDayIndex];
+          const shiftMapSelector = ["volno", "ranni", "odpoledni", "nocni"];
+          const defaultShift = shiftMapSelector[defaultShiftValue] || 'ranni';
+          
+          backupData.days[dateStr] = {
+            hours: defaultHours,
+            hoursShift: defaultShift,
+            overtime: defaultOvertime,
+            overtimeShift: defaultShift,
+            note: ''
+          };
+        }
+        resolve();
+      };
+    });
+  }
+
+  return backupData;
+}
+
+/**
+ * Uloží zálohu do localStorage
+ */
+async function saveBackupToStorage(year, month) {
+  const backup = await createBackupForMonth(year, month);
+  const backupKey = `backup-${year}-${String(month + 1).padStart(2, '0')}`;
+  localStorage.setItem(backupKey, JSON.stringify(backup));
+  updateBackupInfo();
+  return backupKey;
+}
+
+/**
+ * Vrátí seznam všech dostupných záloh
+ */
+function getAvailableBackups() {
+  const backups = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('backup-')) {
+      const data = JSON.parse(localStorage.getItem(key));
+      backups.push({
+        key,
+        year: data.year,
+        month: data.month,
+        date: new Date(data.date),
+        label: `${String(data.month + 1).padStart(2, '0')}/${data.year}`
+      });
+    }
+  }
+  // Seřaď od nejnovější
+  return backups.sort((a, b) => b.date - a.date);
+}
+
+/**
+ * Obnoví data z zálohy do IndexedDB
+ */
+async function restoreFromBackup(backupKey) {
+  const backupJSON = localStorage.getItem(backupKey);
+  if (!backupJSON) {
+    console.error('Zálohování nenalezeno:', backupKey);
+    return false;
+  }
+
+  const backup = JSON.parse(backupJSON);
+  const db = await openDB();
+  const tx = db.transaction('days', 'readwrite');
+  const store = tx.objectStore('days');
+
+  // Obnoví všechny dny ze zálohy
+  for (const dateStr in backup.days) {
+    const dayData = backup.days[dateStr];
+    const data = {
+      date: dateStr,
+      hours: dayData.hours,
+      hoursShift: dayData.hoursShift,
+      overtime: dayData.overtime,
+      overtimeShift: dayData.overtimeShift,
+      note: dayData.note,
+      shift: dayData.hoursShift
+    };
+    store.put(data);
+  }
+
+  return true;
+}
+
+/**
+ * Zobrazí dialog pro výběr a obnovu zálohy
+ */
+async function showRestoreBackupDialog() {
+  const backups = getAvailableBackups();
+  
+  if (backups.length === 0) {
+    showNotification('❌ Žádné dostupné zálohování', 'error');
+    return;
+  }
+
+  // Vytvoř dialog
+  const dialog = document.createElement('div');
+  dialog.className = 'backup-dialog-overlay';
+  dialog.innerHTML = `
+    <div class="backup-dialog">
+      <h3>Dostupné zálohování</h3>
+      <div class="backup-list">
+        ${backups.map((b, i) => `
+          <div class="backup-item" data-key="${b.key}">
+            <strong>${b.label}</strong>
+            <small>${new Date(b.date).toLocaleDateString('cs-CZ', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>
+          </div>
+        `).join('')}
+      </div>
+      <div class="backup-dialog-buttons">
+        <button id="backup-cancel">Zrušit</button>
+        <button id="backup-confirm" disabled>Obnovit</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(dialog);
+
+  let selectedBackupKey = null;
+
+  // Obsluha výběru
+  dialog.querySelectorAll('.backup-item').forEach(item => {
+    item.addEventListener('click', () => {
+      dialog.querySelectorAll('.backup-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+      selectedBackupKey = item.dataset.key;
+      document.getElementById('backup-confirm').disabled = false;
+    });
+  });
+
+  // Obsluha tlačítek
+  document.getElementById('backup-cancel').addEventListener('click', () => {
+    dialog.remove();
+  });
+
+  document.getElementById('backup-confirm').addEventListener('click', async () => {
+    if (selectedBackupKey) {
+      const success = await restoreFromBackup(selectedBackupKey);
+      dialog.remove();
+      
+      if (success) {
+        showNotification('✅ Zálohování bylo obnoveno', 'success');
+        renderCalendar(currentYear, currentMonth);
+      } else {
+        showNotification('❌ Chyba při obnovování zálohy', 'error');
+      }
+    }
+  });
+}
+
+/**
+ * Kontroluje, zda je dnes první den měsíce, a vytvoří zálohu
+ */
+async function checkAndCreateMonthlyBackup() {
+  const today = new Date();
+  const isFirstDay = today.getDate() === 1;
+  
+  if (isFirstDay) {
+    // Vytvoř zálohu minulého měsíce
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1);
+    const backupKey = await saveBackupToStorage(lastMonth.getFullYear(), lastMonth.getMonth());
+    console.log('Měsíční zálohování vytvořeno:', backupKey);
+  }
+}
+
+/**
+ * Aktualizuje informaci o poslední záloze na UI
+ */
+function updateBackupInfo() {
+  const backups = getAvailableBackups();
+  const infoElement = document.getElementById('last-backup-info');
+  
+  if (!infoElement) return;
+
+  if (backups.length === 0) {
+    infoElement.textContent = '⏱️ Zatím nebyla vytvořena žádná záloha';
+    infoElement.style.color = 'var(--text-muted, #999)';
+  } else {
+    const lastBackup = backups[0]; // První je nejnovější (jsou seřazené od nejnovější)
+    const formatted = lastBackup.date.toLocaleDateString('cs-CZ', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    infoElement.textContent = `✅ Poslední záloha: ${lastBackup.label} (${formatted})`;
+    infoElement.style.color = 'var(--success, #4caf50)';
+  }
+}
+
+/**
+ * Vytvoří zálohu pro aktuální měsíc
+ */
+async function createBackupNow() {
+  try {
+    const today = new Date();
+    const backupKey = await saveBackupToStorage(today.getFullYear(), today.getMonth());
+    showNotification(`✅ Zálohování vytvořeno: ${backupKey.replace('backup-', '').replace('-', '/')}`, 'success');
+    
+    // Automaticky nabídni ke stažení
+    setTimeout(() => {
+      downloadBackup(backupKey);
+    }, 500);
+  } catch (error) {
+    console.error('Chyba při vytváření zálohy:', error);
+    showNotification('❌ Chyba při vytváření zálohy', 'error');
+  }
+}
+
+/**
+ * Stáhne zálohu jako JSON soubor
+ */
+function downloadBackup(backupKey) {
+  const backupJSON = localStorage.getItem(backupKey);
+  if (!backupJSON) {
+    showNotification('❌ Zálohování nenalezeno', 'error');
+    return;
+  }
+
+  const backup = JSON.parse(backupJSON);
+  const timestamp = new Date(backup.date);
+  const dateStr = `${timestamp.getFullYear()}-${String(timestamp.getMonth() + 1).padStart(2, '0')}-${String(timestamp.getDate()).padStart(2, '0')}`;
+  const timeStr = `${String(timestamp.getHours()).padStart(2, '0')}-${String(timestamp.getMinutes()).padStart(2, '0')}`;
+  const fileName = `backup-${backup.year}-${String(backup.month + 1).padStart(2, '0')}_${dateStr}_${timeStr}.json`;
+  
+  // Vytvoř blob a stáhni
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  
+  showNotification(`✅ Zálohování staženo: ${fileName}`, 'success');
+}
+
+/**
+ * Otevře dialog pro výběr zálohy ze souboru
+ */
+function openImportBackupDialog() {
+  const fileInput = document.getElementById('backup-file-input');
+  fileInput.click();
+}
+
+/**
+ * Importuje zálohu ze souboru
+ */
+async function importBackupFromFile(file) {
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+
+    // Validuj strukturu zálohy
+    if (!backup.year || backup.month === undefined || !backup.days) {
+      throw new Error('Neplatný formát zálohy');
+    }
+
+    // Ulož do localStorage
+    const backupKey = `backup-${backup.year}-${String(backup.month + 1).padStart(2, '0')}`;
+    localStorage.setItem(backupKey, JSON.stringify(backup));
+    
+    updateBackupInfo();
+    showNotification(`✅ Zálohování importováno: ${backupKey.replace('backup-', '').replace('-', '/')}`, 'success');
+  } catch (error) {
+    console.error('Chyba při importu zálohy:', error);
+    showNotification('❌ Chyba při importu - neplatný soubor', 'error');
+  }
+}
+
+// Obsluha tlačítka pro manuální zálohu
+const btnBackupManual = document.getElementById('btn-backup-manual');
+if (btnBackupManual) {
+  btnBackupManual.addEventListener('click', createBackupNow);
+}
+
+// Obsluha tlačítka pro import
+const btnImportBackup = document.getElementById('btn-import-backup');
+if (btnImportBackup) {
+  btnImportBackup.addEventListener('click', openImportBackupDialog);
+}
+
+// Obsluha file inputu pro import
+const backupFileInput = document.getElementById('backup-file-input');
+if (backupFileInput) {
+  backupFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      importBackupFromFile(e.target.files[0]);
+      e.target.value = ''; // Reset input
+    }
+  });
+}
+
+// Obsluha tlačítka pro obnovu
+const btnRestoreBackup = document.getElementById('btn-restore-backup');
+if (btnRestoreBackup) {
+  btnRestoreBackup.addEventListener('click', showRestoreBackupDialog);
+}
+
+// Aktualizuj informaci o poslední záloze při startu
+updateBackupInfo();
+
+// Zkontroluj zálohování při spuštění aplikace
+checkAndCreateMonthlyBackup();
+
+// Zkontroluj zálohování každý den v poledne
+setInterval(() => {
+  const now = new Date();
+  if (now.getHours() === 12 && now.getMinutes() === 0) {
+    checkAndCreateMonthlyBackup();
+  }
+}, 60000); // Kontrola každou minutu
+
+// =============================
 //      INICIALIZACE KALENDÁŘE
 // ============================
 initializeFirstRun();
