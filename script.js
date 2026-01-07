@@ -1787,11 +1787,15 @@ async function createBackupForMonth(year, month) {
           const defaultShiftValue = sm[shiftDayIndex];
           const shiftMapSelector = ["volno", "ranni", "odpoledni", "nocni"];
           const defaultShift = shiftMapSelector[defaultShiftValue] || 'ranni';
+
+          // Pokud je směna volno, nepřebírej defaultní hodiny ani přesčasy
+          const fallbackHours = defaultShift === 'volno' ? '0' : defaultHours;
+          const fallbackOvertime = defaultShift === 'volno' ? '0' : defaultOvertime;
           
           backupData.days[dateStr] = {
-            hours: defaultHours,
+            hours: fallbackHours,
             hoursShift: defaultShift,
-            overtime: defaultOvertime,
+            overtime: fallbackOvertime,
             overtimeShift: defaultShift,
             note: ''
           };
