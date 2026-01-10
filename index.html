@@ -52,7 +52,7 @@
     <div id="settings-screen" class="screen">
 
   <header class="settings-header">
-      <h2>Nastavení <span id="app-version">v1.47</span></h2>
+      <h2>Nastavení <span id="app-version">v1.48</span></h2>
   </header>
 
   <!-- záhlaví jako segment control -->
@@ -259,10 +259,38 @@
       </div>
       
       <button id="btn-recap-month" class="salary-button">📄 Rekapitulace měsíce</button>
+      <button id="btn-preview-salary" class="salary-button">👁️ Náhled výplaty</button>
     </div>
     
     <div class="salary-footer">
       <button type="button" id="btn-salary-back">⬅️ Zpět</button>
+    </div>
+  </div>
+
+  <!-- ✅ SCREEN: Náhled výplaty -->
+  <div id="salary-preview-screen" class="screen">
+    <header class="salary-preview-header">
+      <h2>👁️ Náhled výplaty</h2>
+    </header>
+    
+    <div class="salary-preview-content">
+      <table class="payslip-table">
+        <thead>
+          <tr>
+            <th class="col-name">Mzdová složka</th>
+            <th class="col-count">Počet</th>
+            <th class="col-rate">Sazba</th>
+            <th class="col-amount">Částka</th>
+          </tr>
+        </thead>
+        <tbody id="payslip-body">
+          <!-- Generuje se v JS -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="salary-preview-footer">
+      <button type="button" id="btn-salary-preview-back">⬅️ Zpět</button>
     </div>
   </div>
 

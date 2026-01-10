@@ -311,6 +311,132 @@ html, body {
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* === Salary Preview Screen === */
+.salary-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0.5rem;
+  background: #fff9c4;
+  border: 2px solid var(--accent, #2196f3);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  flex-shrink: 0;
+}
+
+.salary-preview-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--accent, #2196f3);
+  font-weight: 600;
+}
+
+.salary-preview-content {
+  padding: 0.5rem;
+  overflow-y: auto;
+  flex: 1;
+  background: #e8e8e8;
+}
+
+/* === Payslip Table === */
+.payslip-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  background: #e8e8e8;
+}
+
+.payslip-table th {
+  background: #d0d0d0;
+  color: #333;
+  font-weight: bold;
+  padding: 0.5rem 0.3rem;
+  text-align: left;
+  border-bottom: 2px solid #888;
+}
+
+.payslip-table th.col-name { width: 50%; }
+.payslip-table th.col-count { width: 15%; text-align: right; }
+.payslip-table th.col-rate { width: 15%; text-align: right; }
+.payslip-table th.col-amount { width: 20%; text-align: right; }
+
+.payslip-table td {
+  padding: 0.25rem 0.3rem;
+  border-bottom: 1px dotted #999;
+  vertical-align: top;
+}
+
+.payslip-table td.col-count,
+.payslip-table td.col-rate,
+.payslip-table td.col-amount {
+  text-align: right;
+  font-family: monospace;
+}
+
+.payslip-table tr.section-header td {
+  font-weight: bold;
+  padding: 0.4rem 0.3rem;
+  border-bottom: 1px dashed #666;
+  border-top: 1px dashed #666;
+  background: #d8d8d8;
+  text-align: center;
+  font-size: 0.8rem;
+}
+
+.payslip-table tr.item td {
+  padding-left: 0.5rem;
+}
+
+.payslip-table .negative {
+  color: #c00;
+}
+
+.payslip-table .positive {
+  color: #060;
+}
+
+.salary-preview-footer {
+  padding: 0.75rem;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.salary-preview-footer button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+  max-width: 200px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.salary-preview-footer button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+#salary-preview-screen.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10000;
+  background: var(--bg);
+}
+
 .salary-footer {
   padding: 0.75rem;
   background: var(--bg);
@@ -740,6 +866,16 @@ body[data-theme="dark"] .salary-header {
 }
 
 body[data-theme="dark"] .salary-header h2 {
+  color: #000000;
+}
+
+/* === Tmavé téma - salary preview screen === */
+body[data-theme="dark"] .salary-preview-header {
+  background: #ffcc99;
+  border-color: #ff8c00;
+}
+
+body[data-theme="dark"] .salary-preview-header h2 {
   color: #000000;
 }
 

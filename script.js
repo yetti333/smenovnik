@@ -177,6 +177,18 @@ function showScreen(screen) {
     manualScreen.classList.remove('active');
   }
 
+  // Salary screen
+  const salaryScreen = document.getElementById('salary-screen');
+  if (salaryScreen) {
+    salaryScreen.classList.remove('active');
+  }
+
+  // Salary preview screen
+  const salaryPreviewScreen = document.getElementById('salary-preview-screen');
+  if (salaryPreviewScreen) {
+    salaryPreviewScreen.classList.remove('active');
+  }
+
   // zobrazit vybranou obrazovku
   screen.classList.add('active');
 
@@ -1619,6 +1631,185 @@ if (btnRecapMonth) {
   btnRecapMonth.addEventListener('click', async () => {
     if (navigator.vibrate) navigator.vibrate(vibr);
     await exportMonthToPDF(currentYear, currentMonth);
+  });
+}
+
+// NÁHLED VÝPLATY - TLAČÍTKO
+const btnPreviewSalary = document.getElementById('btn-preview-salary');
+if (btnPreviewSalary) {
+  btnPreviewSalary.addEventListener('click', () => {
+    generatePayslipPreview();
+    showScreen(document.getElementById('salary-preview-screen'));
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+}
+
+/**
+ * Generuje náhled výplatní pásky
+ */
+async function generatePayslipPreview() {
+  const payslipBody = document.getElementById('payslip-body');
+  if (!payslipBody) return;
+  
+  // Získáme data z aktuálního měsíce
+  const year = currentYear;
+  const month = currentMonth;
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  
+  // Načteme data z DB
+  const db = await openDB();
+  const tx = db.transaction('days', 'readonly');
+  const store = tx.objectStore('days');
+  
+  const dataMap = new Map();
+  await new Promise((resolve) => {
+    const req = store.getAll();
+    req.onsuccess = () => {
+      for (const item of req.result) {
+        dataMap.set(item.date, item);
+      }
+      resolve();
+    };
+  });
+  
+  // Spočítáme hodiny
+  let odpracHodiny = 0;
+  let svatkyHodiny = 0;
+  let prescasyHodiny = 0;
+  
+  for (let day = 1; day <= lastDay; day++) {
+    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateObj = new Date(year, month, day);
+    const data = dataMap.get(dateKey);
+    
+    if (data) {
+      const hours = parseFloat(data.hours) || 0;
+      const overtime = parseFloat(data.overtime) || 0;
+      
+      if (isHoliday(dateObj) && hours > 0) {
+        svatkyHodiny += hours;
+      } else {
+        odpracHodiny += hours;
+      }
+      prescasyHodiny += overtime;
+    }
+  }
+  
+  // Získáme sazbu podle platové třídy
+  const salaryClass = localStorage.getItem('salary-class') || '';
+  const hourlyRate = getHourlyRate(salaryClass);
+  
+  // Fond pracovní doby (pracovní dny * 7.5)
+  let fondPracDoby = 0;
+  for (let day = 1; day <= lastDay; day++) {
+    const dateObj = new Date(year, month, day);
+    const dayOfWeek = dateObj.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday(dateObj)) {
+      fondPracDoby += 7.5;
+    }
+  }
+  
+  // Výpočty
+  const zakladniMzda = odpracHodiny * hourlyRate;
+  const nahradaSvatky = svatkyHodiny * hourlyRate;
+  const prescasy = prescasyHodiny * hourlyRate * 1.25; // příplatek 25%
+  
+  const hrubaMzda = zakladniMzda + nahradaSvatky + prescasy;
+  
+  // Pojištění a daně
+  const zdravotniPoj = Math.round(hrubaMzda * 0.045 * 100) / 100;
+  const socialniPoj = Math.round(hrubaMzda * 0.071 * 100) / 100;
+  const danZaloha = Math.round(hrubaMzda * 0.15 * 100) / 100;
+  const slevaPoplatnik = 2570;
+  const danPoSleve = Math.max(0, danZaloha - slevaPoplatnik);
+  
+  const cistaMzda = hrubaMzda - zdravotniPoj - socialniPoj - danPoSleve;
+  
+  // Generujeme HTML
+  let html = '';
+  
+  // Časové náležitosti
+  html += sectionHeader('Časové náležitosti');
+  html += payslipRow('/850 Fond prac.doby', formatNum(fondPracDoby), '', '');
+  html += payslipRow('/851 Odprac.hodiny', formatNum(odpracHodiny), '', '');
+  if (svatkyHodiny > 0) {
+    html += payslipRow('/844 Plac.svátky', formatNum(svatkyHodiny), '', '');
+  }
+  if (prescasyHodiny > 0) {
+    html += payslipRow('/852 Přesčasy', formatNum(prescasyHodiny), '', '');
+  }
+  
+  // Základní mzda
+  html += sectionHeader('Základní mzda');
+  html += payslipRow('1020 Hodinová mzda', '', formatNum(hourlyRate), '');
+  html += payslipRow('2614 Odprac.hodiny × sazba', formatNum(odpracHodiny), formatNum(hourlyRate), formatNum(zakladniMzda));
+  
+  // Náhrady mzdy
+  if (svatkyHodiny > 0 || prescasyHodiny > 0) {
+    html += sectionHeader('Náhrady mzdy');
+    if (svatkyHodiny > 0) {
+      html += payslipRow('3415 Náhrada za svátek', formatNum(svatkyHodiny), formatNum(hourlyRate), formatNum(nahradaSvatky));
+    }
+    if (prescasyHodiny > 0) {
+      html += payslipRow('3420 Přesčasy (+25%)', formatNum(prescasyHodiny), formatNum(hourlyRate * 1.25), formatNum(prescasy));
+    }
+  }
+  
+  // Vyměřovací základy
+  html += sectionHeader('Vyměřovací základy, daně a pojistné');
+  html += payslipRow('/101 Hrubá mzda', '', '', formatNum(hrubaMzda));
+  html += payslipRow('/416 Daň záloha 15%', '', '', formatNum(danZaloha));
+  html += payslipRow('/46X Sleva na poplatníka', '', '', formatNum(slevaPoplatnik));
+  html += payslipRow('/401 Daň po slevě', '', '', formatNum(danPoSleve));
+  html += payslipRow('9P06 Zdravotní poj. 4,5%', formatNum(hrubaMzda), '4,50', formatNum(zdravotniPoj), true);
+  html += payslipRow('9P07 Sociální poj. 7,1%', formatNum(hrubaMzda), '7,10', formatNum(socialniPoj), true);
+  
+  // Čistá mzda
+  html += sectionHeader('K výplatě');
+  html += payslipRow('<strong>Čistá mzda</strong>', '', '', '<strong>' + formatNum(cistaMzda) + '</strong>');
+  
+  payslipBody.innerHTML = html;
+}
+
+function sectionHeader(title) {
+  return `<tr class="section-header"><td colspan="4">——— ${title} ———</td></tr>`;
+}
+
+function payslipRow(name, count, rate, amount, isDeduction = false) {
+  const amountClass = isDeduction ? 'negative' : '';
+  const amountDisplay = isDeduction && amount ? amount + '-' : amount;
+  return `<tr class="item">
+    <td>${name}</td>
+    <td class="col-count">${count}</td>
+    <td class="col-rate">${rate}</td>
+    <td class="col-amount ${amountClass}">${amountDisplay}</td>
+  </tr>`;
+}
+
+function formatNum(num) {
+  if (!num && num !== 0) return '';
+  return Number(num).toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function getHourlyRate(salaryClass) {
+  // Orientační hodinové sazby podle platové třídy
+  const rates = {
+    '4.1': 180, '4.2': 190, '4.3': 200,
+    '5.1': 210, '5.2': 220, '5.3': 230,
+    '6.1': 240, '6.2': 250, '6.3': 260,
+    '7.1': 270
+  };
+  return rates[salaryClass] || 200; // výchozí sazba
+}
+
+// =============================
+// TLAČÍTKA V SALARY PREVIEW
+// =============================
+const btnSalaryPreviewBack = document.getElementById('btn-salary-preview-back');
+if (btnSalaryPreviewBack) {
+  btnSalaryPreviewBack.addEventListener('click', () => {
+    showScreen(document.getElementById('salary-screen'));
+    if (navigator.vibrate) navigator.vibrate(vibr);
   });
 }
 
