@@ -52,7 +52,7 @@
     <div id="settings-screen" class="screen">
 
   <header class="settings-header">
-    <h2>Nastavení <span id="app-version">v1.46</span></h2>
+      <h2>Nastavení <span id="app-version">v1.47</span></h2>
   </header>
 
   <!-- záhlaví jako segment control -->
@@ -234,6 +234,38 @@
 </div>
 
   <!-- ✅ SCREEN: PDF Náhled -->
+  <!-- ✅ SCREEN: Výplata -->
+  <div id="salary-screen" class="screen">
+    <header class="salary-header">
+      <h2>💰 Výplata</h2>
+    </header>
+    
+    <div class="salary-content">
+      <div class="salary-section">
+        <label for="salary-class">Platová třída:</label>
+        <select id="salary-class">
+          <option value="">--</option>
+          <option value="4.1">4.1</option>
+          <option value="4.2">4.2</option>
+          <option value="4.3">4.3</option>
+          <option value="5.1">5.1</option>
+          <option value="5.2">5.2</option>
+          <option value="5.3">5.3</option>
+          <option value="6.1">6.1</option>
+          <option value="6.2">6.2</option>
+          <option value="6.3">6.3</option>
+          <option value="7.1">7.1</option>
+        </select>
+      </div>
+      
+      <button id="btn-recap-month" class="salary-button">📄 Rekapitulace měsíce</button>
+    </div>
+    
+    <div class="salary-footer">
+      <button type="button" id="btn-salary-back">⬅️ Zpět</button>
+    </div>
+  </div>
+
   <div id="pdf-preview-screen" class="screen">
     <header class="pdf-preview-header">
       <h2>Náhled PDF</h2>
@@ -273,7 +305,7 @@
   <!-- ✅ Akční lišta dole -->
 <div class="action-bar">
   <button id="btn-settings">⚙️</button>
-  <button id="btn-export-pdf">📄</button>
+  <button id="btn-salary">💰</button>
   <button id="btn-hours">🕒</button>
   <button id="btn-edit">✏️</button>
   <button id="btn-today">📅</button>

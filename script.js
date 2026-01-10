@@ -253,10 +253,10 @@ document.getElementById('btn-settings').addEventListener('click', () => {
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
-// tlačítko 📄 Export PDF
-document.getElementById('btn-export-pdf').addEventListener('click', () => {
-  exportMonthToPDF(currentYear, currentMonth);
-  //console.log('Export do PDF zatím není dostupný.');
+// tlačítko � Výplata
+document.getElementById('btn-salary').addEventListener('click', () => {
+  showScreen(document.getElementById('salary-screen'));
+  document.body.classList.add("salary-open");
   if (navigator.vibrate) navigator.vibrate(vibr);
 });
 
@@ -1584,6 +1584,47 @@ if (btnManualBack) {
 // =============================
 //      OBSLUHA TLAČÍTEK PDF NÁHLEDU
 // =============================
+// TLAČÍTKO "ZPĚT" V SALARY SCREEN
+// =============================
+const btnSalaryBack = document.getElementById('btn-salary-back');
+if (btnSalaryBack) {
+  btnSalaryBack.addEventListener('click', () => {
+    showScreen(calendarScreen);
+    document.body.classList.remove("salary-open");
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+}
+
+// =============================
+// NASTAVENÍ VÝPLATY - PLATOVÁ TŘÍDA
+// =============================
+const salaryClassSelect = document.getElementById('salary-class');
+if (salaryClassSelect) {
+  // Načíst uloženou hodnotu
+  const savedClass = localStorage.getItem('salary-class');
+  if (savedClass) {
+    salaryClassSelect.value = savedClass;
+  }
+  
+  // Při změně uložit
+  salaryClassSelect.addEventListener('change', (e) => {
+    localStorage.setItem('salary-class', e.target.value);
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+}
+
+// REKAPITULACE MĚSÍCE - TLAČÍTKO
+const btnRecapMonth = document.getElementById('btn-recap-month');
+if (btnRecapMonth) {
+  btnRecapMonth.addEventListener('click', async () => {
+    if (navigator.vibrate) navigator.vibrate(vibr);
+    await exportMonthToPDF(currentYear, currentMonth);
+  });
+}
+
+// =============================
+// TLAČÍTKA V PDF PREVIEW
+// =============================
 const btnPdfSave = document.getElementById('btn-pdf-save');
 const btnPdfBack = document.getElementById('btn-pdf-back');
 const pdfPreviewScreen = document.getElementById('pdf-preview-screen');
@@ -1618,7 +1659,7 @@ if (btnPdfSave) {
 if (btnPdfBack) {
   btnPdfBack.addEventListener('click', () => {
     if (navigator.vibrate) navigator.vibrate(vibr);
-    showScreen(calendarScreen);
+    showScreen(document.getElementById('salary-screen'));
     document.body.classList.remove("pdf-preview-open");
   });
 }

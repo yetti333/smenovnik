@@ -241,6 +241,104 @@ html, body {
   font-weight: 600;
 }
 
+/* === Salary screen header === */
+.salary-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0.5rem;
+  background: #fff9c4;
+  border: 2px solid var(--accent, #2196f3);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.salary-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--accent, #2196f3);
+  font-weight: 600;
+}
+
+.salary-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+#salary-screen.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.salary-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.salary-section label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.salary-section select {
+  width: auto;
+  max-width: 150px;
+  padding: 0.5rem 0.75rem;
+  min-width: fit-content;
+}
+
+.salary-button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1rem;
+}
+
+.salary-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.salary-footer {
+  padding: 0.75rem;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.salary-footer button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  color: white;
+  max-width: 200px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.salary-footer button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
 .settings-content {
   flex: 1;
   overflow-y: auto;
@@ -635,6 +733,16 @@ body[data-theme="dark"] .edit-header h2 {
   color: #000000;
 }
 
+/* === Tmavé téma - salary screen === */
+body[data-theme="dark"] .salary-header {
+  background: #ffcc99;
+  border-color: #ff8c00;
+}
+
+body[data-theme="dark"] .salary-header h2 {
+  color: #000000;
+}
+
 body[data-theme="dark"] .selected-day {
   color: #000000;
   background: #ffcc99;
@@ -726,6 +834,10 @@ body.settings-open .action-bar {
 /* === Skrytí lišty při editaci === */
 body.edit-open .action-bar {
   display: none; /* zamezí kliknutí na tlačítka v editaci */
+}
+/* === Skrytí lišty při výplatě === */
+body.salary-open .action-bar {
+  display: none;
 }
 
 /* === Footer nastavení === */
