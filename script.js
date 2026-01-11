@@ -954,6 +954,7 @@ function getShiftArray() {
     case "C": return smenaC;
     case "D": return smenaD;
     case "R": return smenaR;
+    default: return smenaD; // Fallback pro neznámé hodnoty (např. historické "0")
   }
 }
 
@@ -1772,15 +1773,32 @@ async function generatePayslipPreview() {
   const salaryClass = localStorage.getItem('salary-class') || '';
   const hourlyRate = getHourlyRate(salaryClass);
   
-  // Fond pracovní doby (pracovní dny * 7.5)
+  // Fond pracovní doby - hodiny podle kalendáře a defaultních hodin (bez přesčasů)
   let fondPracDoby = 0;
+  const shiftArray = getShiftArray() || [];
+  const fallbackHours = [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 11]; // Ne/n/Út/St/Čt/Pá/So (Ne=7.5, So=11)
+  
   for (let day = 1; day <= lastDay; day++) {
     const dateObj = new Date(year, month, day);
     const dayOfWeek = dateObj.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6 && !isHoliday(dateObj)) {
-      fondPracDoby += 7.5;
+    
+    // Zjistíme směnu pro tento den
+    // Bezpečně spočítáme index v 28denním cyklu a ošetříme případné chybějící směny
+    const dayIdx = ((daysBetween(dateObj) % 28) + 28) % 28;
+    const shiftCode = shiftArray[dayIdx];
+    if (!shiftCode) continue;
+    
+    // Pokud není volno (0 nebo 'V'), přičteme defaultní hodiny podle dne v týdnu
+    if (shiftCode !== 0 && shiftCode !== 'V') {
+      const stored = localStorage.getItem(weekdayMapHours[dayOfWeek]);
+      let defaultHours = stored !== null ? parseFloat(stored) : fallbackHours[dayOfWeek];
+      if (isNaN(defaultHours)) defaultHours = fallbackHours[dayOfWeek];
+      fondPracDoby += defaultHours;
     }
   }
+
+  // Debug výpis pro kontrolu fondu pracovní doby
+  console.log(`[Payslip] Fond pracovní doby: ${fondPracDoby}`);
   
   // Výpočty
   const zakladniMzda = odpracHodiny * hourlyRate;
