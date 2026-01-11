@@ -245,6 +245,13 @@
         <label for="salary-class">Platová třída:</label>
         <select id="salary-class">
           <option value="">--</option>
+          <option value="1.1">1.1</option>
+          <option value="2.1">2.1</option>
+          <option value="2.2">2.2</option>
+          <option value="2.3">2.3</option>
+          <option value="3.1">3.1</option>
+          <option value="3.2">3.2</option>
+          <option value="3.3">3.3</option>
           <option value="4.1">4.1</option>
           <option value="4.2">4.2</option>
           <option value="4.3">4.3</option>
@@ -255,6 +262,20 @@
           <option value="6.2">6.2</option>
           <option value="6.3">6.3</option>
           <option value="7.1">7.1</option>
+        </select>
+      </div>
+      
+      <div class="salary-section">
+        <label for="salary-ppu">PPÚ (Kč/hod):</label>
+        <input type="number" id="salary-ppu" step="0.01" min="0" placeholder="0.00">
+      </div>
+      
+      <div class="salary-section">
+        <label for="salary-union">Odbory?</label>
+        <select id="salary-union">
+          <option value="">--</option>
+          <option value="ano">Ano</option>
+          <option value="ne">Ne</option>
         </select>
       </div>
       
@@ -333,7 +354,7 @@
   <!-- ✅ Akční lišta dole -->
 <div class="action-bar">
   <button id="btn-settings">⚙️</button>
-  <button id="btn-salary">💰</button>
+  <button id="btn-salary">💵</button>
   <button id="btn-hours">🕒</button>
   <button id="btn-edit">✏️</button>
   <button id="btn-today">📅</button>
