@@ -1673,6 +1673,52 @@ if (salaryUnionSelect) {
   });
 }
 
+// =============================
+// NASTAVENÍ VÝPLATY - ODHAD PRÉMIÍ
+// =============================
+const salaryPremieInput = document.getElementById('salary-premie');
+if (salaryPremieInput) {
+  // Načíst uloženou hodnotu
+  const savedPremie = localStorage.getItem('salary-premie');
+  if (savedPremie) {
+    salaryPremieInput.value = savedPremie;
+  }
+  
+  // Při změně uložit
+  salaryPremieInput.addEventListener('change', (e) => {
+    localStorage.setItem('salary-premie', e.target.value);
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+  
+  // Při focusu vybrat obsah
+  salaryPremieInput.addEventListener('focus', function() {
+    this.select();
+  });
+}
+
+// =============================
+// NASTAVENÍ VÝPLATY - PENZIJNÍ PŘIPOJIŠTĚNÍ
+// =============================
+const salaryPenzijniInput = document.getElementById('salary-penzijni');
+if (salaryPenzijniInput) {
+  // Načíst uloženou hodnotu nebo použít default 2300
+  const savedPenzijni = localStorage.getItem('salary-penzijni');
+  if (savedPenzijni) {
+    salaryPenzijniInput.value = savedPenzijni;
+  }
+  
+  // Při změně uložit
+  salaryPenzijniInput.addEventListener('change', (e) => {
+    localStorage.setItem('salary-penzijni', e.target.value);
+    if (navigator.vibrate) navigator.vibrate(vibr);
+  });
+  
+  // Při focusu vybrat obsah
+  salaryPenzijniInput.addEventListener('focus', function() {
+    this.select();
+  });
+}
+
 /**
  * Kontroluje, zda jsou všechna povinná pole vyplněna
  */
@@ -1929,10 +1975,19 @@ async function generatePayslipPreview() {
   const priplVikend = vikendHodiny * 134.5;
   html += payslipRow('Přípl.Nepř.Pr. So, Ne', formatNum(vikendHodiny), '134,50', formatNum(priplVikend));
   
+  // Prémie
+  const odhadPremii = parseFloat(localStorage.getItem('salary-premie')) || 0;
+  html += sectionHeader('Prémie');
+  html += payslipRow('Odhad prémií', '', '', formatNum(odhadPremii));
+  
   // Náhrady mzdy
   html += sectionHeader('Náhrady mzdy');
   html += payslipRow('Náhrada za svátek', formatNum(svatkyHodiny), formatNum(ppu), formatNum(nahradaSvatky));
-  html += payslipRow('Přesčasy (+25%)', formatNum(prescasyHodiny), formatNum(hourlyRate * 1.25), formatNum(prescasy));
+  
+  // Ostatní příjmy
+  const penzijniPripojisteni = parseFloat(localStorage.getItem('salary-penzijni')) || 2300;
+  html += sectionHeader('Ostatní příjmy');
+  html += payslipRow('Penzijní připojištění', '', '', formatNum(penzijniPripojisteni));
   
   // Vyměřovací základy
   html += sectionHeader('Vyměřovací základy, daně a pojistné');
