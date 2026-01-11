@@ -1746,26 +1746,104 @@ async function generatePayslipPreview() {
     };
   });
   
-  // Spočítáme hodiny
+  // Spočítáme hodiny (stejná logika jako měsíční souhrn v info panelu)
   let odpracHodiny = 0;
   let svatkyHodiny = 0;
   let prescasyHodiny = 0;
+  let dovolenaHodiny = 0;
+  let nocniHodiny = 0;
+  let prescasyNedeleHodiny = 0;
+  let praceSvatekHodiny = 0;
+  let odpoledniHodiny = 0;
+  let vikendHodiny = 0;
+  const shiftArrayForHours = getShiftArray();
   
   for (let day = 1; day <= lastDay; day++) {
     const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const dateObj = new Date(year, month, day);
     const data = dataMap.get(dateKey);
+    let hours = 0;
+    let overtime = 0;
+    let isNocni = false;
     
-    if (data) {
-      const hours = parseFloat(data.hours) || 0;
-      const overtime = parseFloat(data.overtime) || 0;
+    // Zjistíme index směny pro tento den
+    const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+    const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+    
+    if (data && (data.hours || data.overtime)) {
+      hours = parseFloat(data.hours || 0) || 0;
+      overtime = parseFloat(data.overtime || 0) || 0;
       
-      if (isHoliday(dateObj) && hours > 0) {
+      // Pokud je nastavena dovolená, započítáme hodiny do plac.nepřítomností
+      if (data.shift === 'dovolena') {
+        dovolenaHodiny += hours;
+      }
+      
+      // Zkontrolujeme jestli je noční směna (z DB nebo z rotace)
+      if (data.hoursShift === 'nocni') {
+        isNocni = true;
+      } else if (!data.hoursShift && shiftArrayForHours && shiftArrayForHours[shiftDayIndex] === 3) {
+        isNocni = true;
+      }
+    } else {
+      // fallback podle směny a defaultních hodin z localStorage
+      try {
+        if (shiftArrayForHours && (shiftArrayForHours[shiftDayIndex] === 0 || shiftArrayForHours[shiftDayIndex] === 'V')) {
+          hours = 0;
+          overtime = 0;
+        } else {
+          const weekday = dateObj.getDay();
+          const defaultHours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+          const defaultOvertime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
+          hours = isNaN(defaultHours) ? 0 : defaultHours;
+          overtime = isNaN(defaultOvertime) ? 0 : defaultOvertime;
+          
+          // Zkontrolujeme jestli je noční směna z rotace
+          if (shiftArrayForHours && shiftArrayForHours[shiftDayIndex] === 3) {
+            isNocni = true;
+          }
+        }
+      } catch (e) {
+        // pokud by cokoliv selhalo, necháme hodiny 0
+      }
+    }
+    
+    // Sečteme noční hodiny
+    if (isNocni && hours > 0) {
+      nocniHodiny += hours;
+    }
+    
+    // Sečteme odpolední hodiny (směna 2 = odpolední)
+    let isOdpoledni = false;
+    if (data && data.hoursShift === 'odpoledni') {
+      isOdpoledni = true;
+    } else if (!data?.hoursShift && shiftArrayForHours && shiftArrayForHours[shiftDayIndex] === 2) {
+      isOdpoledni = true;
+    }
+    if (isOdpoledni && hours > 0) {
+      odpoledniHodiny += hours;
+    }
+    
+    if (hours > 0) {
+      if (isHoliday(dateObj)) {
         svatkyHodiny += hours;
+        // Hodiny ve svátek (z DB nebo default)
+        praceSvatekHodiny += hours;
       } else {
         odpracHodiny += hours;
       }
-      prescasyHodiny += overtime;
+    }
+    prescasyHodiny += overtime;
+    
+    // Přesčasy v neděli
+    const dayOfWeek = dateObj.getDay();
+    if (dayOfWeek === 0 && overtime > 0) {
+      prescasyNedeleHodiny += overtime;
+    }
+    
+    // Hodiny v sobotu a neděli (bez přesčasů)
+    if ((dayOfWeek === 0 || dayOfWeek === 6) && hours > 0) {
+      vikendHodiny += hours;
     }
   }
   
@@ -1800,9 +1878,13 @@ async function generatePayslipPreview() {
   // Debug výpis pro kontrolu fondu pracovní doby
   console.log(`[Payslip] Fond pracovní doby: ${fondPracDoby}`);
   
+  // Odpracované hodiny k zobrazení = Fond - dovolená + přesčasy
+  const odpracHodinyDisplay = fondPracDoby - dovolenaHodiny + prescasyHodiny;
+
   // Výpočty
+  const ppu = parseFloat(localStorage.getItem('salary-ppu')) || 0;
   const zakladniMzda = odpracHodiny * hourlyRate;
-  const nahradaSvatky = svatkyHodiny * hourlyRate;
+  const nahradaSvatky = svatkyHodiny * ppu;
   const prescasy = prescasyHodiny * hourlyRate * 1.25; // příplatek 25%
   
   const hrubaMzda = zakladniMzda + nahradaSvatky + prescasy;
@@ -1821,30 +1903,36 @@ async function generatePayslipPreview() {
   
   // Časové náležitosti
   html += sectionHeader('Časové náležitosti');
+  html += payslipRow('Plac.nepřítomnosti', formatNum(dovolenaHodiny), '', '');
+  html += payslipRow('Plac.svátky', formatNum(svatkyHodiny), '', '');
   html += payslipRow('Fond prac.doby', formatNum(fondPracDoby), '', '');
-  html += payslipRow('Odprac.hodiny', formatNum(odpracHodiny), '', '');
-  if (svatkyHodiny > 0) {
-    html += payslipRow('Plac.svátky', formatNum(svatkyHodiny), '', '');
-  }
-  if (prescasyHodiny > 0) {
-    html += payslipRow('Přesčasy', formatNum(prescasyHodiny), '', '');
-  }
+  html += payslipRow('Odprac.hodiny', formatNum(odpracHodinyDisplay), '', '');
+  html += payslipRow('Přesčasové hodiny', formatNum(prescasyHodiny), '', '');
   
   // Základní mzda
   html += sectionHeader('Základní mzda');
   html += payslipRow('Hodinová mzda', '', formatNum(hourlyRate), '');
   html += payslipRow('Odprac.hodiny × sazba', formatNum(odpracHodiny), formatNum(hourlyRate), formatNum(zakladniMzda));
   
+  // Příplatky ke mzdě
+  const priplPrescas50 = prescasyHodiny * ppu * 0.5;
+  const priplNocni15 = nocniHodiny * ppu * 0.15;
+  const priplSoNe10 = prescasyNedeleHodiny * ppu * 0.1;
+  const priplPraceSvatek = praceSvatekHodiny * ppu;
+  const priplOdpoledne = odpoledniHodiny * 16;
+  html += sectionHeader('Příplatky ke mzdě');
+  html += payslipRow('Připl.přesčas 50% OTR', formatNum(prescasyHodiny), formatNum(ppu * 0.5), formatNum(priplPrescas50));
+  html += payslipRow('Přípl.pr.v noci 15%', formatNum(nocniHodiny), formatNum(ppu * 0.15), formatNum(priplNocni15));
+  html += payslipRow('Přípl.pr. SO,NE - 10%', formatNum(prescasyNedeleHodiny), formatNum(ppu * 0.1), formatNum(priplSoNe10));
+  html += payslipRow('Přípl.práce ve svátek', formatNum(praceSvatekHodiny), formatNum(ppu), formatNum(priplPraceSvatek));
+  html += payslipRow('Přípl.práce odpoledne', formatNum(odpoledniHodiny), '16', formatNum(priplOdpoledne));
+  const priplVikend = vikendHodiny * 134.5;
+  html += payslipRow('Přípl.Nepř.Pr. So, Ne', formatNum(vikendHodiny), '134,50', formatNum(priplVikend));
+  
   // Náhrady mzdy
-  if (svatkyHodiny > 0 || prescasyHodiny > 0) {
-    html += sectionHeader('Náhrady mzdy');
-    if (svatkyHodiny > 0) {
-      html += payslipRow('Náhrada za svátek', formatNum(svatkyHodiny), formatNum(hourlyRate), formatNum(nahradaSvatky));
-    }
-    if (prescasyHodiny > 0) {
-      html += payslipRow('Přesčasy (+25%)', formatNum(prescasyHodiny), formatNum(hourlyRate * 1.25), formatNum(prescasy));
-    }
-  }
+  html += sectionHeader('Náhrady mzdy');
+  html += payslipRow('Náhrada za svátek', formatNum(svatkyHodiny), formatNum(ppu), formatNum(nahradaSvatky));
+  html += payslipRow('Přesčasy (+25%)', formatNum(prescasyHodiny), formatNum(hourlyRate * 1.25), formatNum(prescasy));
   
   // Vyměřovací základy
   html += sectionHeader('Vyměřovací základy, daně a pojistné');
