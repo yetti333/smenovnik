@@ -486,10 +486,32 @@ async function showMonthSummary(year, month) {
         const req = store.get(dateKey);
         req.onsuccess = () => {
           const data = req.result;
+          const dateObj = new Date(dateKey);
+          const weekday = dateObj.getDay();
+          
+          // Zjistíme defaultní hodiny pro tento den
+          let defaultHoursForDay = 0;
+          try {
+            const sm = getShiftArray();
+            const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
+            const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+            if (sm[shiftDayIndex] !== 0) {
+              defaultHoursForDay = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+            }
+          } catch (e) {
+            defaultHoursForDay = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+          }
+          
           if (data && (data.hours || data.overtime)) {
-            resolve({ hours: parseFloat(data.hours || 0), overtime: parseFloat(data.overtime || 0) });
+            // Pokud je dovolená, odečteme hodiny dovolené z defaultních hodin
+            if (data.shift === 'dovolena') {
+              const dovolenaHours = parseFloat(data.hours || 0);
+              const odpracovaneHours = Math.max(0, defaultHoursForDay - dovolenaHours);
+              resolve({ hours: odpracovaneHours, overtime: parseFloat(data.overtime || 0) });
+            } else {
+              resolve({ hours: parseFloat(data.hours || 0), overtime: parseFloat(data.overtime || 0) });
+            }
           } else {
-            const dateObj = new Date(dateKey);
             // pokud je podle rotačního plánu daný den 'volno', započítáváme 0 hodin
             try {
               const sm = getShiftArray();
@@ -502,7 +524,6 @@ async function showMonthSummary(year, month) {
             } catch (e) {
               // ignore and fall back to defaults
             }
-            const weekday = dateObj.getDay();
             const defaultHours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
             const defaultOvertime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
             resolve({ hours: defaultHours, overtime: defaultOvertime });
@@ -1776,6 +1797,14 @@ async function generatePayslipPreview() {
   const month = currentMonth;
   const lastDay = new Date(year, month + 1, 0).getDate();
   
+  // Aktualizujeme nadpis s měsícem a rokem
+  const monthNames = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 
+                      'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
+  const salaryPreviewMonthEl = document.getElementById('salary-preview-month');
+  if (salaryPreviewMonthEl) {
+    salaryPreviewMonthEl.textContent = `— ${monthNames[month]} ${year}`;
+  }
+  
   // Načteme data z DB
   const db = await openDB();
   const tx = db.transaction('days', 'readonly');
@@ -1815,14 +1844,26 @@ async function generatePayslipPreview() {
     // Zjistíme index směny pro tento den
     const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
     const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
+    const weekday = dateObj.getDay();
     
-    if (data && (data.hours || data.overtime)) {
-      hours = parseFloat(data.hours || 0) || 0;
+    // Zjistíme defaultní hodiny pro tento den
+    let defaultHoursForDay = 0;
+    if (shiftArrayForHours && shiftArrayForHours[shiftDayIndex] !== 0 && shiftArrayForHours[shiftDayIndex] !== 'V') {
+      defaultHoursForDay = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+      if (isNaN(defaultHoursForDay)) defaultHoursForDay = 0;
+    }
+    
+    if (data && (data.hours !== undefined || data.overtime !== undefined)) {
       overtime = parseFloat(data.overtime || 0) || 0;
       
       // Pokud je nastavena dovolená, započítáme hodiny do plac.nepřítomností
+      // a odpracované hodiny = default - dovolená
       if (data.shift === 'dovolena') {
-        dovolenaHodiny += hours;
+        const dovolenaHoursDay = parseFloat(data.hours || 0) || 0;
+        dovolenaHodiny += dovolenaHoursDay;
+        hours = Math.max(0, defaultHoursForDay - dovolenaHoursDay);
+      } else {
+        hours = parseFloat(data.hours || 0) || 0;
       }
       
       // Zkontrolujeme jestli je noční směna (z DB nebo z rotace)
@@ -1838,7 +1879,6 @@ async function generatePayslipPreview() {
           hours = 0;
           overtime = 0;
         } else {
-          const weekday = dateObj.getDay();
           const defaultHours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
           const defaultOvertime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
           hours = isNaN(defaultHours) ? 0 : defaultHours;
@@ -1924,8 +1964,9 @@ async function generatePayslipPreview() {
   // Debug výpis pro kontrolu fondu pracovní doby
   console.log(`[Payslip] Fond pracovní doby: ${fondPracDoby}`);
   
-  // Odpracované hodiny k zobrazení = Fond - dovolená + přesčasy
-  const odpracHodinyDisplay = fondPracDoby - dovolenaHodiny + prescasyHodiny;
+  // Odpracované hodiny k zobrazení = skutečně odpracované (bez svátků) + přesčasy
+  // Ale musíme odečíst dovolená od fondu, protože odpracHodiny = hodiny které nejsou dovolená ani svátek
+  const odpracHodinyDisplay = odpracHodiny + prescasyHodiny;
 
   // Výpočty
   const ppu = parseFloat(localStorage.getItem('salary-ppu')) || 0;
