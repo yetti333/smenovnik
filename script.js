@@ -1912,13 +1912,19 @@ async function generatePayslipPreview() {
     
     if (hours > 0) {
       if (isHoliday(dateObj)) {
-        svatkyHodiny += hours;
-        // Hodiny ve svátek (z DB nebo default)
+        // Skutečně odpracované hodiny ve svátek (pro příplatek za práci ve svátek)
         praceSvatekHodiny += hours;
       } else {
         odpracHodiny += hours;
       }
     }
+    
+    // Plac.svátky = hodiny podle kalendáře ve dnech kdy je svátek a je směna (ne volno)
+    // Tyto hodiny se použijí i pro náhradu za svátek
+    if (isHoliday(dateObj) && defaultHoursForDay > 0) {
+      svatkyHodiny += defaultHoursForDay;
+    }
+    
     prescasyHodiny += overtime;
     
     // Přesčasy v neděli
