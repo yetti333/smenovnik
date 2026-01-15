@@ -1974,18 +1974,18 @@ async function generatePayslipPreview() {
   // Ale musíme odečíst dovolená od fondu, protože odpracHodiny = hodiny které nejsou dovolená ani svátek
   const odpracHodinyDisplay = odpracHodiny + prescasyHodiny;
 
-  // Výpočty
+  // Výpočty (částky zaokrouhleny nahoru)
   const ppu = parseFloat(localStorage.getItem('salary-ppu')) || 0;
-  const zakladniMzda = odpracHodiny * hourlyRate;
-  const nahradaSvatky = svatkyHodiny * ppu;
-  const prescasy = prescasyHodiny * hourlyRate * 1.25; // příplatek 25%
+  const zakladniMzda = Math.ceil(odpracHodinyDisplay * hourlyRate);
+  const nahradaSvatky = Math.ceil(svatkyHodiny * ppu);
+  const prescasy = Math.ceil(prescasyHodiny * hourlyRate * 1.25); // příplatek 25%
   
   const hrubaMzda = zakladniMzda + nahradaSvatky + prescasy;
   
-  // Pojištění a daně
-  const zdravotniPoj = Math.round(hrubaMzda * 0.045 * 100) / 100;
-  const socialniPoj = Math.round(hrubaMzda * 0.071 * 100) / 100;
-  const danZaloha = Math.round(hrubaMzda * 0.15 * 100) / 100;
+  // Pojištění a daně (zaokrouhleno nahoru)
+  const zdravotniPoj = Math.ceil(hrubaMzda * 0.045);
+  const socialniPoj = Math.ceil(hrubaMzda * 0.071);
+  const danZaloha = Math.ceil(hrubaMzda * 0.15);
   const slevaPoplatnik = 2570;
   const danPoSleve = Math.max(0, danZaloha - slevaPoplatnik);
   
@@ -2005,21 +2005,21 @@ async function generatePayslipPreview() {
   // Základní mzda
   html += sectionHeader('Základní mzda');
   html += payslipRow('Hodinová mzda', '', formatNum(hourlyRate), '');
-  html += payslipRow('Odprac.hodiny × sazba', formatNum(odpracHodiny), formatNum(hourlyRate), formatNum(zakladniMzda));
+  html += payslipRow('Hod.m.ukol.přímá-A-PWAS', formatNum(odpracHodinyDisplay), formatNum(hourlyRate), formatNum(zakladniMzda));
   
-  // Příplatky ke mzdě
-  const priplPrescas50 = prescasyHodiny * ppu * 0.5;
-  const priplNocni15 = nocniHodiny * ppu * 0.15;
-  const priplSoNe10 = prescasyNedeleHodiny * ppu * 0.1;
-  const priplPraceSvatek = praceSvatekHodiny * ppu;
-  const priplOdpoledne = odpoledniHodiny * 16;
+  // Příplatky ke mzdě (zaokrouhleno nahoru)
+  const priplPrescas50 = Math.ceil(prescasyHodiny * ppu * 0.5);
+  const priplNocni15 = Math.ceil(nocniHodiny * ppu * 0.15);
+  const priplSoNe10 = Math.ceil(prescasyNedeleHodiny * ppu * 0.1);
+  const priplPraceSvatek = Math.ceil(praceSvatekHodiny * ppu);
+  const priplOdpoledne = Math.ceil(odpoledniHodiny * 16);
   html += sectionHeader('Příplatky ke mzdě');
   html += payslipRow('Připl.přesčas 50% OTR', formatNum(prescasyHodiny), formatNum(ppu * 0.5), formatNum(priplPrescas50));
   html += payslipRow('Přípl.pr.v noci 15%', formatNum(nocniHodiny), formatNum(ppu * 0.15), formatNum(priplNocni15));
   html += payslipRow('Přípl.pr. SO,NE - 10%', formatNum(prescasyNedeleHodiny), formatNum(ppu * 0.1), formatNum(priplSoNe10));
   html += payslipRow('Přípl.práce ve svátek', formatNum(praceSvatekHodiny), formatNum(ppu), formatNum(priplPraceSvatek));
   html += payslipRow('Přípl.práce odpoledne', formatNum(odpoledniHodiny), '16', formatNum(priplOdpoledne));
-  const priplVikend = vikendHodiny * 134.5;
+  const priplVikend = Math.ceil(vikendHodiny * 134.5);
   html += payslipRow('Přípl.Nepř.Pr. So, Ne', formatNum(vikendHodiny), '134,50', formatNum(priplVikend));
   
   // Prémie
