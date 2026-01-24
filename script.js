@@ -71,15 +71,21 @@ if ("serviceWorker" in navigator) {
     }
   });
 }
-
+/*
 const smenaA = [0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0]; //28x, 1-11-2025
 const smenaB = [1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1];
 const smenaC = [3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3];
 const smenaD = [0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2];
-const smenaR = [0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1]; // rotační volno každý 7.den
+const smenaR = [0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1]; // ranní směna
+*/
 const days = ["Neděle","Pondělí","Úterý","Středa","Čtvrtek","Pátek","Sobota"];
 const shifts = ["Volno", "Ranní", "Odpolední", "Noční"];
 
+const smenaA = [2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2]; //28x, 1-1-2025
+const smenaB = [3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3];
+const smenaC = [0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0];
+const smenaD = [1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1];
+const smenaR = [1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1]; // ranní směna
 // returns true when dateObj matches a holiday in svatky or velikonoce
 function isHoliday(dateObj) {
   const key = `${dateObj.getDate()}-${dateObj.getMonth() + 1}`;
@@ -869,7 +875,7 @@ document.getElementById("btn-today").addEventListener("click", () => {
 
 // tlačítko ⬅️ předchozího měsíce v akční liště
 document.getElementById("btn-prev").addEventListener("click", () => {
-  if (currentYear === 2025 && currentMonth === 10) {
+  if (currentYear === 2025 && currentMonth === 0) {
     return;
   }
   currentMonth--;
@@ -1005,8 +1011,8 @@ async function renderCalendar(year, month) {
   const monthNameCap = monthName.charAt(0).toUpperCase() + monthName.slice(1);
   monthYear.textContent = `${monthNameCap} ${year}`;
   
-  // Zakázat tlačítko předchozí měsíc pro listopad 2025
- if (year === 2025 && month === 10) {
+  // Zakázat tlačítko předchozí měsíc pro leden 2025
+ if (year === 2025 && month === 0) {
     prevButton.disabled = true;
     prevButton.style.pointerEvents = 'none';
   } else {
@@ -1314,7 +1320,7 @@ function handleSwipeGesture() {
 //      POČET DNŮ MEZI DATY
 // ============================
 function daysBetween(day1) {
-  const day2 = new Date(Date.UTC(2025, 10, 1)); // listopad 2025 jako základ
+  const day2 = new Date(Date.UTC(2025, 0, 1)); // leden 2025 jako základ
   const d1 = new Date(Date.UTC(day1.getFullYear(), day1.getMonth(), day1.getDate()));
   const diff = (d1 - day2) / (1000 * 60 * 60 * 24);
   return Math.round(diff);
