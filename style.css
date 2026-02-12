@@ -537,40 +537,6 @@ html, body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 
-/* tabs */
-.tab-header {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  flex-wrap: nowrap;
-  margin: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.tab-header button {
-  flex: 1 1 auto;
-  padding: 14px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #ffffff;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 16px;
-  color: #444;
-  transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.2s;
-  text-align: center;
-}
-
-.tab-header button.active {
-  background: #2196f3;
-  color: white;
-  border-color: #2196f3;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-}
-
 .tab-content {
   padding: 16px;
   overflow-y: auto;
@@ -615,25 +581,6 @@ html, body {
   accent-color: #2196f3;
 }
 
-.hours-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1em;
-  background-color: #ffffff;
-}
-
-.hours-table th, .hours-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: center;
-}
-
-.hours-table th {
-  background-color: #2196f3;
-  color: white;
-}
-
-.hours-table input[type="number"],
 .hours-form input[type="number"] {
   width: 6em;
   padding: 6px;
@@ -655,7 +602,6 @@ html, body {
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.hours-table input[type="number"]:focus,
 .hours-form input[type="number"]:focus,
 .hours-form select:focus {
   border-color: #FFC107;
@@ -777,24 +723,6 @@ body[data-theme="dark"] .segmented-control button.active {
   border-color: #ff8c00;
 }
 
-/* === Tmavé téma - tab header === */
-body[data-theme="dark"] .tab-header {
-  background: #1a1a1a;
-  border-color: #ff8c00;
-}
-
-body[data-theme="dark"] .tab-header button {
-  background: #2a2a2a;
-  color: #ffcc99;
-  border-color: #ff8c00;
-}
-
-body[data-theme="dark"] .tab-header button.active {
-  background: #ff8c00;
-  color: #000000;
-  border-color: #ff8c00;
-}
-
 /* === Tmavé téma - settings footer === */
 body[data-theme="dark"] .settings-footer {
   background: #1a1a1a;
@@ -829,23 +757,7 @@ body[data-theme="dark"] #btn-cancel {
   border: 1px solid #ff8c00;
 }
 
-/* === Tmavé téma - hours table === */
-body[data-theme="dark"] .hours-table {
-  background-color: #1a1a1a;
-}
-
-body[data-theme="dark"] .hours-table th, body[data-theme="dark"] .hours-table td {
-  border-color: #444;
-  color: #ffcc99;
-}
-
-body[data-theme="dark"] .hours-table th {
-  background-color: #ff8c00;
-  color: #000000;
-  font-weight: 600;
-}
-
-body[data-theme="dark"] .hours-table input[type="number"],
+/* === Tmavé téma - hours form === */
 body[data-theme="dark"] .hours-form input[type="number"] {
   border-color: #ff8c00;
   background-color: #2a2a2a;
@@ -858,7 +770,6 @@ body[data-theme="dark"] .hours-form select {
   color: #ffcc99;
 }
 
-body[data-theme="dark"] .hours-table input[type="number"]:focus,
 body[data-theme="dark"] .hours-form input[type="number"]:focus,
 body[data-theme="dark"] .hours-form select:focus {
   border-color: #ffcc99;
@@ -1166,26 +1077,7 @@ body[data-theme="dark"] #btn-show-manual:hover {
   box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
 }
 
-#btn-import-backup {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-  color: white;
-  border: none;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  cursor: pointer;
-  font-weight: 600;
-  margin-top: 0.75rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
-  width: 100%;
-}
-#btn-import-backup:hover { 
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(255, 152, 0, 0.3);
-}
-
-#btn-restore-backup {
+#btn-restore-from-file {
   background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
   color: white;
   border: none;
@@ -1199,7 +1091,7 @@ body[data-theme="dark"] #btn-show-manual:hover {
   transition: all 0.2s ease;
   width: 100%;
 }
-#btn-restore-backup:hover { 
+#btn-restore-from-file:hover { 
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
 }
@@ -1214,21 +1106,12 @@ body[data-theme="dark"] #btn-backup-manual:hover {
   box-shadow: 0 4px 8px rgba(102, 187, 106, 0.3);
 }
 
-body[data-theme="dark"] #btn-import-backup {
-  background: linear-gradient(135deg, #ffb74d 0%, #ffa726 100%);
-  color: #000000;
-}
-
-body[data-theme="dark"] #btn-import-backup:hover {
-  box-shadow: 0 4px 8px rgba(255, 183, 77, 0.3);
-}
-
-body[data-theme="dark"] #btn-restore-backup {
+body[data-theme="dark"] #btn-restore-from-file {
   background: linear-gradient(135deg, #ff8c00 0%, #cc7000 100%);
   color: #000000;
 }
 
-body[data-theme="dark"] #btn-restore-backup:hover {
+body[data-theme="dark"] #btn-restore-from-file:hover {
   box-shadow: 0 4px 8px rgba(255, 140, 0, 0.3);
 }
 

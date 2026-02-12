@@ -52,19 +52,12 @@
     <div id="settings-screen" class="screen">
 
   <header class="settings-header">
-      <h2>Nastavení <span id="app-version">v1.48</span></h2>
+      <h2>Nastavení <span id="app-version">v1.50</span></h2>
   </header>
-
-  <!-- záhlaví jako segment control -->
-  <div class="tab-header">
-    <button data-tab="hours" class="active">⏰ Hodiny</button>
-    <button data-tab="general">⚙️ Obecné</button>
-    
-  </div>
 
   <div class="tab-content">
     <!-- Obecné nastavení -->
-    <div id="general" class="tab-pane">
+    <div id="general" class="tab-pane active">
       
       <!-- Motiv -->
       <section class="settings-section">
@@ -92,11 +85,9 @@
         <h3>Data</h3>
         <button id="btn-backup-manual">💾 Vytvořit zálohu nyní</button>
         <p class="muted small">Vytvoří zálohu a nabídne ji ke stažení.</p>
-        <button id="btn-import-backup">📤 Importovat zálohu ze souboru</button>
-        <p class="muted small">Nahraje dříve staženou zálohu z počítače/telefonu. Můžeš vybrat víc souborů najednou.</p>
-        <input type="file" id="backup-file-input" accept=".json" multiple style="display: none;">
-        <button id="btn-restore-backup">📥 Obnovit z dostupných záloh</button>
-        <p class="muted small">Obnoví data z dostupných záloh v zařízení.</p>
+        <button id="btn-restore-from-file">📥 Obnovit ze zálohy</button>
+        <p class="muted small">Vybere zálohu ze souboru a ihned obnoví data.</p>
+        <input type="file" id="backup-file-input" accept=".json" style="display: none;">
         <p id="last-backup-info" class="backup-info"></p>
         <button id="btn-reset-data">Resetovat data</button>
         <p class="muted">Vymaže všechna uložená data (IndexedDB + vybrané položky localStorage).</p>
@@ -108,60 +99,6 @@
         <button id="btn-show-manual">📖 Zobrazit návod k použití</button>
       </section>
     </div>
-
-    <!-- Hodiny -->
-<div id="hours" class="tab-pane active">
-  <section class="settings-section">
-    <h2>Základní nastavení odpracovaných hodin pro jednotlivé směnové dny</h2>
-    
-    <table class="hours-table">
-      <thead>
-        <tr>
-          <th>Den</th>
-          <th>Odpracované hodiny</th>
-          <th>Přesčasy</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Pondělí</td>
-          <td><input type="number" id="mon-hours" name="mon-hours" value="7.5" step="0.5"></td>
-          <td><input type="number" id="mon-overtime" name="mon-overtime" value="0" step="0.5"></td>
-        </tr>
-        <tr>
-          <td>Úterý</td>
-          <td><input type="number" id="tue-hours" name="tue-hours" value="7.5" step="0.5"></td>
-          <td><input type="number" id="tue-overtime" name="tue-overtime" value="0" step="0.5"></td>
-        </tr>
-        <tr>
-          <td>Středa</td>
-          <td><input type="number" id="wed-hours" name="wed-hours" value="7.5" step="0.5"></td>
-          <td><input type="number" id="wed-overtime" name="wed-overtime" value="0" step="0.5"></td>
-        </tr>
-        <tr>
-          <td>Čtvrtek</td>
-          <td><input type="number" id="thu-hours" name="thu-hours" value="7.5" step="0.5"></td>
-          <td><input type="number" id="thu-overtime" name="thu-overtime" value="0" step="0.5"></td>
-        </tr>
-        <tr>
-          <td>Pátek</td>
-          <td><input type="number" id="fri-hours" name="fri-hours" value="7.5" step="0.5"></td>
-          <td><input type="number" id="fri-overtime" name="fri-overtime" value="0" step="0.5"></td>
-        </tr>
-        <tr>
-          <td>Sobota</td>
-          <td><input type="number" id="sat-hours" name="sat-hours" value="11" step="0.5"></td>
-          <td><input type="number" id="sat-overtime" name="sat-overtime" value="0" step="0.5"></td>
-        </tr>
-        <tr>
-          <td>Neděle</td>
-          <td><input type="number" id="sun-hours" name="sun-hours" value="7.5" step="0.5"></td>
-          <td><input type="number" id="sun-overtime" name="sun-overtime" value="0" step="0.5"></td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-</div>
   </div>
 
   <div class="settings-footer">

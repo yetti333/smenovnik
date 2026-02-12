@@ -80,6 +80,47 @@ const smenaB = [3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3];
 const smenaC = [0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0];
 const smenaD = [1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1];
 const smenaR = [1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1]; // ranní směna
+
+// =============================
+//      DEFAULTNÍ HODINY PO SMĚNÁCH
+// =============================
+// Index: 0=Ne, 1=Po, 2=Út, 3=St, 4=Čt, 5=Pá, 6=So
+const DEFAULT_HOURS = {
+  A: [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 11],  // Ne, Po-Pá, So
+  B: [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 11],
+  C: [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 11],
+  D: [7.5, 7.5, 7.5, 7.5, 7.5, 7.5, 11],
+  R: [0, 7.5, 7.5, 7.5, 7.5, 7.5, 0]      // víkend 0
+};
+
+const DEFAULT_OVERTIME = {
+  A: [0, 0, 0, 0, 0, 0, 0],
+  B: [0, 0, 0, 0, 0, 0, 0],
+  C: [0, 0, 0, 0, 0, 0, 0],
+  D: [0, 0, 0, 0, 0, 0, 0],
+  R: [0, 0, 0, 0, 0, 0, 0]
+};
+
+/**
+ * Vrátí defaultní hodiny pro daný den v týdnu a směnu
+ * @param {number} weekday - Den v týdnu (0=Ne, 1=Po, ..., 6=So)
+ * @param {string} shift - Směna (A, B, C, D, R) - volitelné, použije activeShift
+ */
+function getDefaultHours(weekday, shift) {
+  const s = shift || activeShift || localStorage.getItem('shift') || 'D';
+  return DEFAULT_HOURS[s] ? DEFAULT_HOURS[s][weekday] : 7.5;
+}
+
+/**
+ * Vrátí defaultní přesčasy pro daný den v týdnu a směnu
+ * @param {number} weekday - Den v týdnu (0=Ne, 1=Po, ..., 6=So)
+ * @param {string} shift - Směna (A, B, C, D, R) - volitelné, použije activeShift
+ */
+function getDefaultOvertime(weekday, shift) {
+  const s = shift || activeShift || localStorage.getItem('shift') || 'D';
+  return DEFAULT_OVERTIME[s] ? DEFAULT_OVERTIME[s][weekday] : 0;
+}
+
 // returns true when dateObj matches a holiday in svatky or velikonoce
 function isHoliday(dateObj) {
   const key = `${dateObj.getDate()}-${dateObj.getMonth() + 1}`;
@@ -206,8 +247,8 @@ function showScreen(screen) {
         calendarScreen.querySelectorAll(".day.selected").forEach(el => el.classList.remove("selected"));
         cellHours.parentElement.classList.add("selected");
       } else {
-        // fallback: pokud buňka neexistuje (např. měníš měsíc), znovu vyrenderuj aktuální měsíc
-        renderCalendar(actualYear, actualMonth);
+        // fallback: pokud buňka neexistuje (např. měníš měsíc), znovu vyrenderuj aktuální zobrazený měsíc
+        renderCalendar(currentYear, currentMonth);
 
         // a po renderu zkus obnovu ještě jednou
         requestAnimationFrame(() => {
@@ -326,9 +367,9 @@ async function getDayData(dateKey) {
             if (smena[shiftDayIndex] === 0) {
             resolve({ hours: '0', overtime: '0', shift: shiftTextLocal, hoursShift: 'volno', overtimeShift: '', note: '', fromDB: false });
           } else {
-            const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
-            const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
-            resolve({ hours: defaultHours, overtime: defaultOvertime, shift: shiftTextLocal, hoursShift: shiftCodeFromRotation, overtimeShift: shiftCodeFromRotation, note: '', fromDB: false });
+            const defaultHours = getDefaultHours(weekday);
+            const defaultOvertime = getDefaultOvertime(weekday);
+            resolve({ hours: String(defaultHours), overtime: String(defaultOvertime), shift: shiftTextLocal, hoursShift: shiftCodeFromRotation, overtimeShift: shiftCodeFromRotation, note: '', fromDB: false });
           }
       }
     };
@@ -496,10 +537,10 @@ async function showMonthSummary(year, month) {
             const shiftDayStart = daysBetween(new Date(dateObj.getFullYear(), dateObj.getMonth(), 1));
             const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
             if (sm[shiftDayIndex] !== 0) {
-              defaultHoursForDay = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+              defaultHoursForDay = getDefaultHours(weekday);
             }
           } catch (e) {
-            defaultHoursForDay = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
+            defaultHoursForDay = getDefaultHours(weekday);
           }
           
           if (data && (data.hours || data.overtime)) {
@@ -524,8 +565,8 @@ async function showMonthSummary(year, month) {
             } catch (e) {
               // ignore and fall back to defaults
             }
-            const defaultHours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
-            const defaultOvertime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
+            const defaultHours = getDefaultHours(weekday);
+            const defaultOvertime = getDefaultOvertime(weekday);
             resolve({ hours: defaultHours, overtime: defaultOvertime });
           }
         };
@@ -616,8 +657,8 @@ async function exportMonthToPDF(year, month) {
       const shiftDayIndex = (shiftDayStart + dateObj.getDate() - 1) % 28;
       
       if (sm[shiftDayIndex] !== 0) {
-        const hours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
-        const overtime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
+        const hours = getDefaultHours(weekday);
+        const overtime = getDefaultOvertime(weekday);
         totalHours += hours + overtime;
       }
     } else {
@@ -684,8 +725,8 @@ async function exportMonthToPDF(year, month) {
       let hours = '0';
       let overtime = '0';
       if (sm[shiftDayIndex] !== 0) {
-        hours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
-        overtime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
+        hours = String(getDefaultHours(weekday));
+        overtime = String(getDefaultOvertime(weekday));
       }
       data = { hours, overtime, note: '' };
       
@@ -794,8 +835,8 @@ async function loadDayData(selectedDate) {
       // kdyz v WorkHoursDB nic není, tak načteme defaultní hodnotu z localStorage z defaultních hodin
       const dateObj = new Date(currentSelectedDate);
       const weekday = dateObj.getDay(); // 0 = neděle, 1 = pondělí, ...
-      const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
-      const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
+      const defaultHours = getDefaultHours(weekday);
+      const defaultOvertime = getDefaultOvertime(weekday);
       
       // Načti defaultní směnu z kalendáře (rotace)
       const sm = getShiftArray();
@@ -805,9 +846,9 @@ async function loadDayData(selectedDate) {
       const shiftMapSelector = ["volno","ranni","odpoledni","nocni"];
       const defaultShift = shiftMapSelector[defaultShiftValue] || 'ranni';
       
-      document.getElementById('day-hours').value = defaultHours || '7.5';
+      document.getElementById('day-hours').value = defaultHours;
       document.getElementById('day-shift-hours').value = defaultShift;
-      document.getElementById('day-overtime').value = defaultOvertime || '0';
+      document.getElementById('day-overtime').value = defaultOvertime;
       document.getElementById('day-shift-overtime').value = defaultShift;
       document.getElementById('day-note').value = '';
     }
@@ -894,8 +935,6 @@ document.getElementById("btn-next").addEventListener("click", () => {
 
 // tlačítko 🕒Zobrazit/skrýt pracovní hodiny
 const btnHours = document.getElementById("btn-hours");
-const weekdayMapHours = ["sun-hours","mon-hours","tue-hours","wed-hours","thu-hours","fri-hours","sat-hours"];
-const weekdayMapOvertime = ["sun-overtime","mon-overtime","tue-overtime","wed-overtime","thu-overtime","fri-overtime","sat-overtime"];
 
 
 btnHours.addEventListener("click", async () => {
@@ -946,9 +985,9 @@ btnHours.addEventListener("click", async () => {
                 cell.textContent = "";
               } else {
                 const weekday = dateObj.getDay(); // 0 = neděle, 1 = pondělí, ...
-                const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
-                const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
-                const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
+                const defaultHours = getDefaultHours(weekday);
+                const defaultOvertime = getDefaultOvertime(weekday);
+                const totalHours = defaultHours + defaultOvertime;
                 cell.textContent = totalHours;
               }
               // Without DB record, ensure vacation attribute is cleared
@@ -1124,9 +1163,9 @@ async function renderCalendar(year, month) {
                 cell.textContent = "";
               } else {
                 const weekday = dateObj.getDay();
-                const defaultHours = localStorage.getItem(weekdayMapHours[weekday]);
-                const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]);
-                const totalHours = parseFloat(defaultHours || "0") + parseFloat(defaultOvertime || "0");
+                const defaultHours = getDefaultHours(weekday);
+                const defaultOvertime = getDefaultOvertime(weekday);
+                const totalHours = defaultHours + defaultOvertime;
                 cell.textContent = totalHours;
               }
               // Without DB record, ensure vacation attribute is cleared
@@ -1296,7 +1335,7 @@ function handleSwipeGesture() {
 
   if (touchEndX > touchStartX + threshold) {
     // swipe vpravo → předchozí měsíc
-    if (currentYear === 2025 && currentMonth === 10) {
+    if (currentYear === 2025 && currentMonth === 0) {
     return;
   }
     currentMonth--;
@@ -1374,62 +1413,24 @@ themeControl.addEventListener("click", (e) => {
 });
 
 // ================================================
-//      ZAKLADNÍ NASTAVENÍ HODIN 
+//      TLAČÍTKA NASTAVENÍ OK/CANCEL 
 // ================================================
-const inputsDefaultHours = document.querySelectorAll('#hours input[type="number"]');
-  // načtení a obsluha inputů
-inputsDefaultHours.forEach(input => {
-  // načtení uložené hodnoty
-  const savedValue = localStorage.getItem(input.id);
-  if (savedValue !== null) {
-    input.value = savedValue;
-  }
-  // při kliknutí do pole se vymaže obsah
-  input.addEventListener('focus', function() {
-    this.select();
-  });
-
-  // volitelně i při kliknutí myší
-  input.addEventListener('click', function() {
-    this.value = '';
-  });
-
-  // Enter = vyskočení z pole
-  input.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      event.stopPropagation();
-      this.blur(); // ztratí focus
-    }
-  });
-
-  // tlačítko OK uloží všechny hodnoty
-  const btnOk = document.getElementById('btn-settings-ok');
-  btnOk.addEventListener('click', () => {
-    inputsDefaultHours.forEach(input => {
-      localStorage.setItem(input.id, input.value);
-    });
-    showScreen(calendarScreen);
-    document.body.classList.remove("settings-open");
-    if (navigator.vibrate) navigator.vibrate(vibr);
-    // Re-render calendar to reflect any changes from settings
-    renderCalendar(currentYear, currentMonth);
-  });
-
-  // tlačítko Cancel vrátí hodnotu z localStorage
-  const btnCancel = document.getElementById('btn-settings-cancel');
-  btnCancel.addEventListener('click', () => {
-    const savedValue = localStorage.getItem(input.id);
-    if (savedValue !== null) {
-      input.value = savedValue;
-    }
-    showScreen(calendarScreen);
-    document.body.classList.remove("settings-open");
-    if (navigator.vibrate) navigator.vibrate(vibr);
-    // Re-render calendar to reflect any changes from settings
-    renderCalendar(currentYear, currentMonth);
-  });
+const btnSettingsOk = document.getElementById('btn-settings-ok');
+btnSettingsOk.addEventListener('click', () => {
+  showScreen(calendarScreen);
+  document.body.classList.remove("settings-open");
+  if (navigator.vibrate) navigator.vibrate(vibr);
+  renderCalendar(currentYear, currentMonth);
 });
+
+const btnSettingsCancel = document.getElementById('btn-settings-cancel');
+btnSettingsCancel.addEventListener('click', () => {
+  showScreen(calendarScreen);
+  document.body.classList.remove("settings-open");
+  if (navigator.vibrate) navigator.vibrate(vibr);
+  renderCalendar(currentYear, currentMonth);
+});
+
 // ================================
 //      OŠETŘENÍ INPUTU EDITACE DNŮ
 // ================================
@@ -1499,11 +1500,7 @@ if (btnReset) {
 
     // odstranit relevantní položky z localStorage
     try {
-      const keys = [];
-      weekdayMapHours.forEach(k => keys.push(k));
-      weekdayMapOvertime.forEach(k => keys.push(k));
-      ['shift','theme','selectedDate','btn-hours-on'].forEach(k => keys.push(k));
-      keys.forEach(k => localStorage.removeItem(k));
+      ['shift','theme','selectedDate','btn-hours-on'].forEach(k => localStorage.removeItem(k));
     } catch (e) {
       console.error('Chyba při vymazávání localStorage', e);
     }
@@ -1851,8 +1848,7 @@ async function generatePayslipPreview() {
     // Zjistíme defaultní hodiny pro tento den
     let defaultHoursForDay = 0;
     if (shiftArrayForHours && shiftArrayForHours[shiftDayIndex] !== 0 && shiftArrayForHours[shiftDayIndex] !== 'V') {
-      defaultHoursForDay = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
-      if (isNaN(defaultHoursForDay)) defaultHoursForDay = 0;
+      defaultHoursForDay = getDefaultHours(weekday);
     }
     
     if (data && (data.hours !== undefined || data.overtime !== undefined)) {
@@ -1881,10 +1877,10 @@ async function generatePayslipPreview() {
           hours = 0;
           overtime = 0;
         } else {
-          const defaultHours = parseFloat(localStorage.getItem(weekdayMapHours[weekday]) || '0');
-          const defaultOvertime = parseFloat(localStorage.getItem(weekdayMapOvertime[weekday]) || '0');
-          hours = isNaN(defaultHours) ? 0 : defaultHours;
-          overtime = isNaN(defaultOvertime) ? 0 : defaultOvertime;
+          const defaultHours = getDefaultHours(weekday);
+          const defaultOvertime = getDefaultOvertime(weekday);
+          hours = defaultHours;
+          overtime = defaultOvertime;
           
           // Zkontrolujeme jestli je noční směna z rotace
           if (shiftArrayForHours && shiftArrayForHours[shiftDayIndex] === 3) {
@@ -1981,10 +1977,7 @@ async function generatePayslipPreview() {
     
     // Pokud není volno (0 nebo 'V'), přičteme defaultní hodiny podle dne v týdnu
     if (shiftCode !== 0 && shiftCode !== 'V') {
-      const stored = localStorage.getItem(weekdayMapHours[dayOfWeek]);
-      let defaultHours = stored !== null ? parseFloat(stored) : fallbackHours[dayOfWeek];
-      if (isNaN(defaultHours)) defaultHours = fallbackHours[dayOfWeek];
-      fondPracDoby += defaultHours;
+      fondPracDoby += getDefaultHours(dayOfWeek);
     }
   }
 
@@ -2167,71 +2160,14 @@ if (btnPdfBack) {
 //      INICIALIZACE PRVNÍ SPUŠTĚNÍ
 // =============================
 function initializeFirstRun() {
-  // Zkontroluj zda existují defaultní hodiny v localStorage
-  const isFirstRun = !localStorage.getItem('mon-hours');
+  // Zkontroluj zda existuje nastavení směny
+  const isFirstRun = !localStorage.getItem('shift');
   
   if (isFirstRun) {
-    // Defaultní pracovní doba - 7.5 hodin pro všední dny, 0 pro víkendy
-    const defaultHours = {
-      'sun-hours': '0',      // Neděle
-      'mon-hours': '7.5',    // Pondělí
-      'tue-hours': '7.5',    // Úterý
-      'wed-hours': '7.5',    // Středa
-      'thu-hours': '7.5',    // Čtvrtek
-      'fri-hours': '7.5',    // Pátek
-      'sat-hours': '0'       // Sobota
-    };
-    
-    const defaultOvertime = {
-      'sun-overtime': '0',
-      'mon-overtime': '0',
-      'tue-overtime': '0',
-      'wed-overtime': '0',
-      'thu-overtime': '0',
-      'fri-overtime': '0',
-      'sat-overtime': '0'
-    };
-    
-    // Ulož defaultní hodnoty
-    Object.entries(defaultHours).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
-    });
-    
-    Object.entries(defaultOvertime).forEach(([key, value]) => {
-      localStorage.setItem(key, value);
-    });
-    
     // Nastav defaultní shift na "D" (Smena D)
     localStorage.setItem('shift', 'D');
     
-    // Zobraz upozornění uživateli
-    console.log('%c🎉 První spuštění! Defaultní hodiny byly nastaveny.', 'background: #2196f3; color: white; padding: 8px; border-radius: 4px;');
-    console.log('Podrobnosti najdeš v ⚙️ Nastavení');
-    
-    // Volitelně: Zobraz malé upozornění v DOM
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 80px;
-      left: 10px;
-      right: 10px;
-      background: #2196f3;
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      z-index: 5000;
-      font-weight: 600;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      animation: slideDown 0.3s ease-out;
-    `;
-    notification.textContent = '📋 První spuštění! Defaultní hodiny nastaveny. Jdi do ⚙️ pro úpravu.';
-    document.body.appendChild(notification);
-    
-    // Smaž notifikaci po 5 sekundách
-    setTimeout(() => {
-      notification.style.animation = 'slideUp 0.3s ease-out';
-      setTimeout(() => notification.remove(), 300);
-    }, 5000);
+    console.log('%c🎉 První spuštění! Defaultní směna D nastavena.', 'background: #2196f3; color: white; padding: 8px; border-radius: 4px;');
   }
 }
 
@@ -2276,74 +2212,39 @@ function showNotification(message, type = 'info') {
 }
 
 /**
- * Vytvoří zálohu pro daný měsíc
- * @param {number} year - Rok
- * @param {number} month - Měsíc (0-11)
- * @returns {Promise<Object>} Záloha s daty všech dní měsíce
+ * Vytvoří zálohu všech záznamů z IndexedDB
+ * @returns {Promise<Object>} Záloha se všemi daty z DB
  */
-async function createBackupForMonth(year, month) {
+async function createFullBackup() {
   const db = await openDB();
   const tx = db.transaction('days', 'readonly');
   const store = tx.objectStore('days');
   
-  // Počet dní v měsíci
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const backupData = {
-    year,
-    month,
     date: new Date().toISOString(),
     days: {}
   };
 
-  // Projdi všechny dny měsíce
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateObj = new Date(year, month, day);
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const weekday = dateObj.getDay();
-
-    // Pokus se načíst z DB
-    const request = store.get(dateStr);
-    
-    await new Promise((resolve) => {
-      request.onsuccess = () => {
-        const data = request.result;
-        if (data) {
-          backupData.days[dateStr] = {
+  // Načti všechny záznamy z DB
+  await new Promise((resolve) => {
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const allRecords = request.result;
+      allRecords.forEach(data => {
+        if (data.date) {
+          backupData.days[data.date] = {
             hours: data.hours,
             hoursShift: data.hoursShift,
             overtime: data.overtime,
             overtimeShift: data.overtimeShift,
             note: data.note
           };
-        } else {
-          // Použij default hodnoty
-          const defaultHours = localStorage.getItem(weekdayMapHours[weekday]) || '0';
-          const defaultOvertime = localStorage.getItem(weekdayMapOvertime[weekday]) || '0';
-          
-          // Shift z rotace
-          const sm = getShiftArray();
-          const shiftDayStart = daysBetween(new Date(year, month, 1));
-          const shiftDayIndex = (shiftDayStart + day - 1) % 28;
-          const defaultShiftValue = sm[shiftDayIndex];
-          const shiftMapSelector = ["volno", "ranni", "odpoledni", "nocni"];
-          const defaultShift = shiftMapSelector[defaultShiftValue] || 'ranni';
-
-          // Pokud je směna volno, nepřebírej defaultní hodiny ani přesčasy
-          const fallbackHours = defaultShift === 'volno' ? '0' : defaultHours;
-          const fallbackOvertime = defaultShift === 'volno' ? '0' : defaultOvertime;
-          
-          backupData.days[dateStr] = {
-            hours: fallbackHours,
-            hoursShift: defaultShift,
-            overtime: fallbackOvertime,
-            overtimeShift: defaultShift,
-            note: ''
-          };
         }
-        resolve();
-      };
-    });
-  }
+      });
+      resolve();
+    };
+    request.onerror = () => resolve();
+  });
 
   return backupData;
 }
@@ -2351,8 +2252,8 @@ async function createBackupForMonth(year, month) {
 /**
  * Uloží zálohu do localStorage
  */
-async function saveBackupToStorage(year, month) {
-  const backup = await createBackupForMonth(year, month);
+async function saveBackupToStorage() {
+  const backup = await createFullBackup();
   const timestamp = new Date(backup.date);
   const dateStr = `${timestamp.getFullYear()}-${String(timestamp.getMonth() + 1).padStart(2, '0')}-${String(timestamp.getDate()).padStart(2, '0')}`;
   const timeStr = `${String(timestamp.getHours()).padStart(2, '0')}-${String(timestamp.getMinutes()).padStart(2, '0')}`;
@@ -2372,12 +2273,11 @@ function getAvailableBackups() {
     if (key.startsWith('backup_')) {
       try {
         const data = JSON.parse(localStorage.getItem(key));
+        const recordCount = Object.keys(data.days || {}).length;
         backups.push({
           key,
-          year: data.year,
-          month: data.month,
           date: new Date(data.date),
-          label: `${String(data.month + 1).padStart(2, '0')}/${data.year}`,
+          label: `${recordCount} záznamů`,
           displayDate: new Date(data.date).toLocaleDateString('cs-CZ', { 
             year: 'numeric', 
             month: 'long', 
@@ -2429,84 +2329,6 @@ async function restoreFromBackup(backupKey) {
 }
 
 /**
- * Zobrazí dialog pro výběr a obnovu zálohy
- */
-async function showRestoreBackupDialog() {
-  const backups = getAvailableBackups();
-  
-  if (backups.length === 0) {
-    showNotification('❌ Žádné dostupné zálohování', 'error');
-    return;
-  }
-
-  // Vytvoř dialog
-  const dialog = document.createElement('div');
-  dialog.className = 'backup-dialog-overlay';
-  dialog.innerHTML = `
-    <div class="backup-dialog">
-      <h3>Dostupné zálohování (${backups.length})</h3>
-      <div class="backup-list">
-        ${backups.map((b, i) => `
-          <div class="backup-item" data-key="${b.key}">
-            <strong>${b.label} - ${b.displayDate}</strong>
-          </div>
-        `).join('')}
-      </div>
-      <div class="backup-dialog-buttons">
-        <button id="backup-cancel">Zrušit</button>
-        <button id="backup-confirm" disabled>Obnovit</button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(dialog);
-
-  let selectedBackupKey = null;
-
-  // Obsluha výběru
-  dialog.querySelectorAll('.backup-item').forEach(item => {
-    item.addEventListener('click', () => {
-      dialog.querySelectorAll('.backup-item').forEach(i => i.classList.remove('active'));
-      item.classList.add('active');
-      selectedBackupKey = item.dataset.key;
-      document.getElementById('backup-confirm').disabled = false;
-    });
-  });
-
-  // Obsluha tlačítek
-  document.getElementById('backup-cancel').addEventListener('click', () => {
-    dialog.remove();
-  });
-
-  document.getElementById('backup-confirm').addEventListener('click', async () => {
-    if (selectedBackupKey) {
-      // Zjisti rok a měsíc ze zálohy
-      const backupJSON = localStorage.getItem(selectedBackupKey);
-      const backup = JSON.parse(backupJSON);
-      
-      const success = await restoreFromBackup(selectedBackupKey);
-      dialog.remove();
-      
-      if (success) {
-        showNotification('✅ Zálohování bylo obnoveno', 'success');
-        
-        // Přeskoč na měsíc obnovené zálohy
-        currentYear = backup.year;
-        currentMonth = backup.month;
-        localStorage.setItem('selectedDate', `${backup.year}-${String(backup.month + 1).padStart(2, '0')}-01`);
-        
-        // Zavři nastavení a zobraz kalendář
-        showScreen(calendarScreen);
-        document.body.classList.remove("settings-open");
-        renderCalendar(currentYear, currentMonth);
-      } else {
-        showNotification('❌ Chyba při obnovování zálohy', 'error');
-      }
-    }
-  });
-}
-
-/**
  * Kontroluje, zda je dnes první den měsíce, a vytvoří zálohu
  */
 async function checkAndCreateMonthlyBackup() {
@@ -2514,9 +2336,8 @@ async function checkAndCreateMonthlyBackup() {
   const isFirstDay = today.getDate() === 1;
   
   if (isFirstDay) {
-    // Vytvoř zálohu minulého měsíce
-    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1);
-    const backupKey = await saveBackupToStorage(lastMonth.getFullYear(), lastMonth.getMonth());
+    // Vytvoř zálohu celé DB
+    const backupKey = await saveBackupToStorage();
     console.log('Měsíční zálohování vytvořeno:', backupKey);
   }
 }
@@ -2548,13 +2369,12 @@ function updateBackupInfo() {
 }
 
 /**
- * Vytvoří zálohu pro aktuální měsíc
+ * Vytvoří zálohu celé DB
  */
 async function createBackupNow() {
   try {
-    const today = new Date();
-    const backupKey = await saveBackupToStorage(today.getFullYear(), today.getMonth());
-    showNotification(`✅ Zálohování vytvořeno: ${backupKey.replace('backup-', '').replace('-', '/')}`, 'success');
+    const backupKey = await saveBackupToStorage();
+    showNotification(`✅ Zálohování vytvořeno`, 'success');
     
     // Automaticky nabídni ke stažení
     setTimeout(() => {
@@ -2597,15 +2417,7 @@ function downloadBackup(backupKey) {
 }
 
 /**
- * Otevře dialog pro výběr zálohy ze souboru
- */
-function openImportBackupDialog() {
-  const fileInput = document.getElementById('backup-file-input');
-  fileInput.click();
-}
-
-/**
- * Importuje zálohu ze souboru
+ * Importuje zálohu ze souboru a vrátí klíč zálohy
  */
 async function importBackupFromFile(file) {
   try {
@@ -2619,7 +2431,7 @@ async function importBackupFromFile(file) {
     const backup = JSON.parse(text);
 
     // Validuj strukturu zálohy
-    if (!backup.year || backup.month === undefined || !backup.days) {
+    if (!backup.days) {
       throw new Error('InvalidFormat');
     }
 
@@ -2632,10 +2444,10 @@ async function importBackupFromFile(file) {
     localStorage.setItem(backupKey, JSON.stringify(backup));
     
     updateBackupInfo();
-    return true;
+    return backupKey; // Vrátí klíč pro následnou obnovu
   } catch (error) {
     // Pouze v dev módu: console.debug('Chyba importu:', error);
-    return false;
+    return null;
   }
 }
 
@@ -2645,46 +2457,54 @@ if (btnBackupManual) {
   btnBackupManual.addEventListener('click', createBackupNow);
 }
 
-// Obsluha tlačítka pro import
-const btnImportBackup = document.getElementById('btn-import-backup');
-if (btnImportBackup) {
-  btnImportBackup.addEventListener('click', openImportBackupDialog);
+// Obsluha tlačítka pro obnovu ze souboru
+const btnRestoreFromFile = document.getElementById('btn-restore-from-file');
+if (btnRestoreFromFile) {
+  btnRestoreFromFile.addEventListener('click', () => {
+    const fileInput = document.getElementById('backup-file-input');
+    fileInput.click();
+  });
 }
 
-// Obsluha file inputu pro import
+// Obsluha file inputu pro obnovu
 const backupFileInput = document.getElementById('backup-file-input');
 if (backupFileInput) {
   backupFileInput.addEventListener('change', async (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      let successCount = 0;
-      let errorCount = 0;
+      const file = e.target.files[0];
       
-      // Zpracuj všechny vybrané soubory
-      for (let file of e.target.files) {
-        const success = await importBackupFromFile(file);
+      // Importuj zálohu do localStorage
+      const backupKey = await importBackupFromFile(file);
+      
+      if (backupKey) {
+        // Ihned obnov data z importované zálohy
+        const backupJSON = localStorage.getItem(backupKey);
+        const backup = JSON.parse(backupJSON);
+        
+        const success = await restoreFromBackup(backupKey);
+        
         if (success) {
-          successCount++;
+          showNotification('✅ Záloha byla obnovena', 'success');
+          
+          // Přeskoč na měsíc obnovené zálohy
+          currentYear = backup.year;
+          currentMonth = backup.month;
+          localStorage.setItem('selectedDate', `${backup.year}-${String(backup.month + 1).padStart(2, '0')}-01`);
+          
+          // Zavři nastavení a zobraz kalendář
+          showScreen(calendarScreen);
+          document.body.classList.remove("settings-open");
+          renderCalendar(currentYear, currentMonth);
         } else {
-          errorCount++;
+          showNotification('❌ Chyba při obnovování zálohy', 'error');
         }
-      }
-      
-      // Zobraz shrnutí
-      if (successCount > 0) {
-        showNotification(`✅ Importováno ${successCount} záloh${successCount === 1 ? 'ování' : ''}${errorCount > 0 ? `, ${errorCount} chyb` : ''}`, 'success');
-      } else if (errorCount > 0) {
-        showNotification(`❌ Všechny soubory se nepodařilo importovat`, 'error');
+      } else {
+        showNotification('❌ Neplatný soubor zálohy', 'error');
       }
       
       e.target.value = ''; // Reset input
     }
   });
-}
-
-// Obsluha tlačítka pro obnovu
-const btnRestoreBackup = document.getElementById('btn-restore-backup');
-if (btnRestoreBackup) {
-  btnRestoreBackup.addEventListener('click', showRestoreBackupDialog);
 }
 
 // Aktualizuj informaci o poslední záloze při startu
