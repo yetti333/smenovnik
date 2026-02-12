@@ -71,13 +71,7 @@ if ("serviceWorker" in navigator) {
     }
   });
 }
-/*
-const smenaA = [0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0]; //28x, 1-11-2025
-const smenaB = [1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3,3,3,0,0,0,0,1];
-const smenaC = [3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2,0,0,1,1,1,1,3];
-const smenaD = [0,0,1,1,1,1,3,3,3,0,0,0,0,1,1,1,3,3,3,3,0,0,0,2,2,2,2,2];
-const smenaR = [0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1]; // ranní směna
-*/
+
 const days = ["Neděle","Pondělí","Úterý","Středa","Čtvrtek","Pátek","Sobota"];
 const shifts = ["Volno", "Ranní", "Odpolední", "Noční"];
 
@@ -2040,16 +2034,16 @@ async function generatePayslipPreview() {
   const priplNocni15 = Math.ceil((nocniHodiny + prescasyNocniHodiny) * ppu * 0.15);
   const priplSoNe10 = Math.ceil(prescasyNedeleHodiny * ppu * 0.1);
   const priplPraceSvatek = Math.ceil(praceSvatekHodiny * ppu);
-  const priplOdpoledne = Math.ceil((odpoledniHodiny + prescasyOdpoledniHodiny) * 16);
+  const priplOdpoledne = Math.ceil((odpoledniHodiny + prescasyOdpoledniHodiny) * 16.6);
   
   html += sectionHeader('Příplatky ke mzdě');
   html += payslipRow('Připl.přesčas 50% OTR', formatNum(prescasyHodiny), formatNum(ppu * 0.5), formatNum(priplPrescas50));
   html += payslipRow('Přípl.pr.v noci 15%', formatNum(nocniHodiny + prescasyNocniHodiny), formatNum(ppu * 0.15), formatNum(priplNocni15));
   html += payslipRow('Přípl.pr. SO,NE - 10%', formatNum(prescasyNedeleHodiny), formatNum(ppu * 0.1), formatNum(priplSoNe10));
   html += payslipRow('Přípl.práce ve svátek', formatNum(praceSvatekHodiny), formatNum(ppu), formatNum(priplPraceSvatek));
-  html += payslipRow('Přípl.práce odpoledne', formatNum(odpoledniHodiny + prescasyOdpoledniHodiny), '16', formatNum(priplOdpoledne));
-  const priplVikend = Math.ceil(vikendHodiny * 134.5);
-  html += payslipRow('Přípl.Nepř.Pr. So, Ne', formatNum(vikendHodiny), '134,50', formatNum(priplVikend));
+  html += payslipRow('Přípl.práce odpoledne', formatNum(odpoledniHodiny + prescasyOdpoledniHodiny), '16,60', formatNum(priplOdpoledne));
+  const priplVikend = Math.ceil(vikendHodiny * 139.9);
+  html += payslipRow('Přípl.Nepř.Pr. So, Ne', formatNum(vikendHodiny), '139,90', formatNum(priplVikend));
   
   // Prémie
   const odhadPremii = parseFloat(localStorage.getItem('salary-premie')) || 0;
@@ -2105,13 +2099,13 @@ function formatNum(num) {
 function getHourlyRate(salaryClass) {
   // Orientační hodinové sazby podle platové třídy
   const rates = {
-    '1.1': 120.1,
-    '2.1': 140.7, '2.2': 147.3, '2.3': 155.5,
-    '3.1': 159.8, '3.2': 164.4, '3.3': 168.6,
-    '4.1': 177.7, '4.2': 186.1, '4.3': 193.3,
-    '5.1': 202.4, '5.2': 210.9, '5.3': 218.8,
-    '6.1': 221.2, '6.2': 229.2, '6.3': 236.1,
-    '7.1': 242.6
+    '1.1': 124.9,
+    '2.1': 146.3, '2.2': 152.2, '2.3': 161.7,
+    '3.1': 166.1, '3.2': 170.9, '3.3': 175.9,
+    '4.1': 184.8, '4.2': 193.5, '4.3': 201,
+    '5.1': 210.4, '5.2': 219.3, '5.3': 227.5,
+    '6.1': 229, '6.2': 238.3, '6.3': 245.5,
+    '7.1': 252.3
   };
   return rates[salaryClass] || 200; // výchozí sazba
 }
