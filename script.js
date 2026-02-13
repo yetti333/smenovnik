@@ -1823,6 +1823,7 @@ async function generatePayslipPreview() {
   let svatkyHodiny = 0;
   let prescasyHodiny = 0;
   let dovolenaHodiny = 0;
+  let nemocHodiny = 0;
   let nocniHodiny = 0;
   let prescasyNocniHodiny = 0;
   let prescasyNedeleHodiny = 0;
@@ -1853,6 +1854,11 @@ async function generatePayslipPreview() {
     
     if (data && (data.hours !== undefined || data.overtime !== undefined)) {
       overtime = parseFloat(data.overtime || 0) || 0;
+
+      if (data.shift === 'nemoc') {
+        const nemocHoursDay = parseFloat(data.hours || 0) || 0;
+        nemocHodiny += nemocHoursDay;
+      }
       
       // Pokud je nastavena dovolená, započítáme hodiny do plac.nepřítomností
       // a odpracované hodiny = default - dovolená
@@ -1993,6 +1999,7 @@ async function generatePayslipPreview() {
   const zakladniMzda = Math.ceil(odpracHodinyDisplay * hourlyRate);
   const nahradaSvatky = Math.ceil(svatkyHodiny * ppu);
   const nahradaDovolena = Math.ceil(dovolenaHodiny * ppu);
+  const nahradaNemoc = Math.ceil(nemocHodiny * ppu * 0.6);
   const prescasy = Math.ceil(prescasyHodiny * hourlyRate * 1.25); // příplatek 25%
   
   const hrubaMzda = zakladniMzda + nahradaSvatky + prescasy;
@@ -2052,6 +2059,10 @@ async function generatePayslipPreview() {
   const penzijniPripojisteni = parseFloat(localStorage.getItem('salary-penzijni')) || 2300;
   html += sectionHeader('Ostatní příjmy');
   html += payslipRow('Penzijní připojištění', '', '', formatNum(penzijniPripojisteni));
+
+  // Náhrady za nemoc a dávky hrazené OSSZ
+  html += sectionHeader('Náhrady za nemoc a dávky hrazené OSSZ');
+  html += payslipRow('Náhr.mzdy/platu 60%', formatNum(nemocHodiny), formatNum(ppu * 0.6), formatNum(nahradaNemoc));
   
   // Vyměřovací základy
   html += sectionHeader('Vyměřovací základy, daně a pojistné');
@@ -2325,6 +2336,12 @@ async function restoreFromBackup(backupKey) {
     store.put(data);
   }
 
+  await new Promise((resolve) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => resolve();
+    tx.onabort = () => resolve();
+  });
+
   return true;
 }
 
@@ -2485,11 +2502,14 @@ if (backupFileInput) {
         
         if (success) {
           showNotification('✅ Záloha byla obnovena', 'success');
-          
-          // Přeskoč na měsíc obnovené zálohy
-          currentYear = backup.year;
-          currentMonth = backup.month;
-          localStorage.setItem('selectedDate', `${backup.year}-${String(backup.month + 1).padStart(2, '0')}-01`);
+
+          // Přeskoč na měsíc obnovené zálohy (fallback na aktuální datum)
+          const backupDate = backup?.date ? new Date(backup.date) : new Date();
+          const safeYear = Number.isFinite(backupDate.getFullYear()) ? backupDate.getFullYear() : actualYear;
+          const safeMonth = Number.isFinite(backupDate.getMonth()) ? backupDate.getMonth() : actualMonth;
+          currentYear = safeYear;
+          currentMonth = safeMonth;
+          localStorage.setItem('selectedDate', `${safeYear}-${String(safeMonth + 1).padStart(2, '0')}-01`);
           
           // Zavři nastavení a zobraz kalendář
           showScreen(calendarScreen);
