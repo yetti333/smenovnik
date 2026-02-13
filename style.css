@@ -807,6 +807,69 @@ body[data-theme="dark"] .salary-preview-header h2 {
   color: #000000;
 }
 
+body[data-theme="dark"] .salary-content {
+  background: #1a1a1a;
+}
+
+body[data-theme="dark"] .salary-section label {
+  color: #ffcc99;
+}
+
+body[data-theme="dark"] .salary-section input,
+body[data-theme="dark"] .salary-section select {
+  background: #2a2a2a;
+  color: #ffcc99;
+  border-color: #ff8c00;
+}
+
+body[data-theme="dark"] .salary-section input:focus,
+body[data-theme="dark"] .salary-section select:focus {
+  border-color: #ffcc99;
+  box-shadow: 0 0 6px rgba(255,204,153,0.5);
+}
+
+body[data-theme="dark"] .salary-button,
+body[data-theme="dark"] .salary-footer button,
+body[data-theme="dark"] .salary-preview-footer button {
+  background: linear-gradient(135deg, #ff8c00 0%, #cc7000 100%);
+  color: #000000;
+}
+
+body[data-theme="dark"] .salary-preview-content {
+  background: #1a1a1a;
+}
+
+body[data-theme="dark"] .payslip-table {
+  background: #1a1a1a;
+  color: #ffcc99;
+}
+
+body[data-theme="dark"] .payslip-table th {
+  background: #2a2a2a;
+  color: #ffcc99;
+  border-bottom-color: #ff8c00;
+}
+
+body[data-theme="dark"] .payslip-table td {
+  border-bottom-color: #444;
+}
+
+body[data-theme="dark"] .payslip-table td,
+body[data-theme="dark"] .payslip-table td strong {
+  color: #ffcc99;
+}
+
+body[data-theme="dark"] .payslip-table tr.item td {
+  background: #1a1a1a;
+}
+
+body[data-theme="dark"] .payslip-table tr.section-header td {
+  background: #262626;
+  border-bottom-color: #ff8c00;
+  border-top-color: #ff8c00;
+  color: #ffcc99;
+}
+
 body[data-theme="dark"] .selected-day {
   color: #000000;
   background: #ffcc99;
