@@ -888,13 +888,6 @@ const btnEditOk = document.getElementById('btn-ok').addEventListener('click', as
   renderCalendar(currentYear, currentMonth);
 });
 
-const btnEditCancel = document.getElementById('btn-cancel').addEventListener('click', async (e) => {
-  e.preventDefault();
-  if (navigator.vibrate) navigator.vibrate(vibr);
-   // návrat na kalendář
-  showScreen(calendarScreen);
-  document.body.classList.remove("edit-open");
-});
 
 // tlačítko 📅 Dnes v akční liště
 document.getElementById("btn-today").addEventListener("click", () => {
@@ -1413,18 +1406,10 @@ themeControl.addEventListener("click", (e) => {
 });
 
 // ================================================
-//      TLAČÍTKA NASTAVENÍ OK/CANCEL 
+//      TLAČÍTKO NASTAVENÍ OK
 // ================================================
 const btnSettingsOk = document.getElementById('btn-settings-ok');
 btnSettingsOk.addEventListener('click', () => {
-  showScreen(calendarScreen);
-  document.body.classList.remove("settings-open");
-  if (navigator.vibrate) navigator.vibrate(vibr);
-  renderCalendar(currentYear, currentMonth);
-});
-
-const btnSettingsCancel = document.getElementById('btn-settings-cancel');
-btnSettingsCancel.addEventListener('click', () => {
   showScreen(calendarScreen);
   document.body.classList.remove("settings-open");
   if (navigator.vibrate) navigator.vibrate(vibr);

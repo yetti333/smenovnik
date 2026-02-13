@@ -368,7 +368,7 @@ html, body {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
-  background: #e8e8e8;
+  background: #f7f7f7;
 }
 
 .payslip-table th {
@@ -430,6 +430,8 @@ html, body {
 }
 
 .salary-preview-footer button {
+  width: 50%;
+  max-width: 100%;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   border: none;
@@ -472,6 +474,8 @@ html, body {
 }
 
 .salary-footer button {
+  width: 50%;
+  max-width: 100%;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   border: none;
@@ -734,12 +738,6 @@ body[data-theme="dark"] #btn-settings-ok {
   color: #000000;
 }
 
-body[data-theme="dark"] #btn-settings-cancel {
-  background: #2a2a2a;
-  color: #ffcc99;
-  border: 1px solid #ff8c00;
-}
-
 /* === Tmavé téma - edit footer === */
 body[data-theme="dark"] .edit-footer {
   background: #1a1a1a;
@@ -749,12 +747,6 @@ body[data-theme="dark"] .edit-footer {
 body[data-theme="dark"] #btn-ok {
   background: #ff8c00;
   color: #000000;
-}
-
-body[data-theme="dark"] #btn-cancel {
-  background: #2a2a2a;
-  color: #ffcc99;
-  border: 1px solid #ff8c00;
 }
 
 /* === Tmavé téma - hours form === */
@@ -934,9 +926,9 @@ body.salary-open .action-bar {
   cursor: default;
 }
 
-#btn-settings-ok, #btn-settings-cancel {
-  flex: 1;
-  max-width: 150px;
+#btn-settings-ok {
+  width:50%;
+  max-width: 100%;
   padding: 0.85rem 1.5rem;
   border-radius: 10px;
   font-size: 1rem;
@@ -952,22 +944,12 @@ body.salary-open .action-bar {
   color: white;
 }
 
-#btn-settings-cancel {
-  background: white;
-  color: #6c757d;
-  border: 2px solid #dee2e6;
-}
 
 #btn-settings-ok:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
 }
 
-#btn-settings-cancel:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-  transform: translateY(-2px);
-}
 
 /* === Footer editace === */
 .edit-footer {
@@ -980,9 +962,9 @@ body.salary-open .action-bar {
   border-top: 1px solid #e9ecef;
 }
 
-.edit-footer button {
-  flex: 1;
-  max-width: 150px;
+#btn-ok {
+  width: 50%;
+  max-width: 100%;
   padding: 0.85rem 1.5rem;
   border-radius: 10px;
   font-size: 1rem;
@@ -998,22 +980,12 @@ body.salary-open .action-bar {
   color: white;
 }
 
-#btn-cancel {
-  background: white;
-  color: #6c757d;
-  border: 2px solid #dee2e6;
-}
 
 #btn-ok:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
 }
 
-#btn-cancel:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-  transform: translateY(-2px);
-}
 
 /* Reset button in settings */
 #btn-reset-data {
